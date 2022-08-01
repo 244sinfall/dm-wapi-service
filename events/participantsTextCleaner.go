@@ -43,40 +43,25 @@ func CleanParticipantsText(c *gin.Context) {
 	scanner := bufio.NewScanner(strings.NewReader(raw.RawText))
 	for scanner.Scan() {
 		line := scanner.Text()
-		//fmt.Println(line)
-		//empty check
 		if len(strings.TrimSpace(line)) == 0 {
-			//fmt.Println("empty line skipped")
 			continue
 		}
 		lineHasLegitSuffix := checkForLegitSuffixes(line)
 		if lineHasLegitSuffix {
-			//fmt.Println("has suffix")
 			if strings.Count(line, " ") == 1 {
 				cleaned += line + "\n"
-				//fmt.Println("has one spaced, added to " + cleaned)
 				continue
 			}
 		}
-		//fmt.Println("has no suffix")
 		before, after, found := strings.Cut(line, " ")
-		//fmt.Println("before: " + before + "after: " + after)
 		regexp, _ := regexp2.Compile("([А-яА-Я])+")
 		if found {
-			//fmt.Println("reg exp work:")
-			//fmt.Println(regexp.FindString(before))
 			cleaned += regexp.FindString(before) + "\n"
 			edited += before + " " + after + "\n"
 		} else {
-			//fmt.Println("reg exp work:")
-			//fmt.Println(regexp.FindString(line))
 			cleaned += regexp.FindString(line) + "\n"
 		}
 		continue
-
-		//if strings.ContainsAny(line, " W") || strings.ContainsAny(line, " M") ||
-		//	strings.ContainsAny(line, " W") ||  strings.ContainsAny(line, " W") ||
-		//	strings.ContainsAny(line, " W")
 	}
 	c.JSON(http.StatusOK, gin.H{"cleanedText": cleaned, "editedLines": edited})
 }
