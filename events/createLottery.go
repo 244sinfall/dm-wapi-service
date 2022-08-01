@@ -1,7 +1,6 @@
 package events
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"math"
 	"math/rand"
@@ -22,36 +21,27 @@ const (
 	potentialWinnerStep     = maxPotentialWinnersPart - minPotentialWinnersPart
 )
 
-func (i itemPrice) getItemName() string {
-	switch i {
-	case 72:
-		return "epic"
-	case 24:
-		return "rare"
-	case 6:
-		return "unusual"
-	case 2:
-		return "usual"
-	case 1:
-		return "low"
-	default:
-		return "undefined"
-	}
-}
-
 type lotteryCreatorError string
 
 func (l lotteryCreatorError) Error() string {
 	return string(l)
 }
 
+type LotteryObject struct {
+	Epic    int `json:"epic"`
+	Rare    int `json:"rare"`
+	Unusual int `json:"unusual"`
+	Usual   int `json:"usual"`
+	Low     int `json:"low"`
+}
+
 type RespondLotteryObject struct {
-	ParticipantsCount  int            `json:"participantsCount"`
-	BankPerParticipant float64        `json:"bankPerParticipant"`
-	Bank               float64        `json:"bank"`
-	BankRemain         float64        `json:"bankRemain"`
-	PotentialWinners   int            `json:"potentialWinners"`
-	Lottery            map[string]int `json:"lottery"`
+	ParticipantsCount  int           `json:"participantsCount"`
+	BankPerParticipant float64       `json:"bankPerParticipant"`
+	Bank               float64       `json:"bank"`
+	BankRemain         float64       `json:"bankRemain"`
+	PotentialWinners   int           `json:"potentialWinners"`
+	Lottery            LotteryObject `json:"lottery"`
 }
 
 type LotteryCreator struct {
@@ -62,24 +52,22 @@ type LotteryCreator struct {
 
 func (r *RespondLotteryObject) generateLotteryObject(qualityOverQuantityMode bool) {
 	if qualityOverQuantityMode {
-		fmt.Println(r.BankRemain)
-		for r.BankRemain > 1 {
-			fmt.Println(r.BankRemain, r.Lottery, "quality on")
+		for r.BankRemain >= 1 {
 			switch {
 			case r.BankRemain >= float64(epicItem):
-				r.Lottery[epicItem.getItemName()]++
+				r.Lottery.Epic++
 				r.BankRemain -= float64(epicItem)
 			case r.BankRemain >= float64(rareItem):
-				r.Lottery[rareItem.getItemName()]++
+				r.Lottery.Rare++
 				r.BankRemain -= float64(rareItem)
 			case r.BankRemain >= float64(unusualItem):
-				r.Lottery[unusualItem.getItemName()]++
+				r.Lottery.Unusual++
 				r.BankRemain -= float64(unusualItem)
 			case r.BankRemain >= float64(usualItem):
-				r.Lottery[usualItem.getItemName()]++
+				r.Lottery.Usual++
 				r.BankRemain -= float64(usualItem)
 			case r.BankRemain >= float64(lowQualityItem):
-				r.Lottery[lowQualityItem.getItemName()]++
+				r.Lottery.Low++
 				r.BankRemain -= float64(lowQualityItem)
 			default:
 				break
@@ -87,33 +75,31 @@ func (r *RespondLotteryObject) generateLotteryObject(qualityOverQuantityMode boo
 		}
 	} else {
 		potentialWinners := r.PotentialWinners
-		fmt.Println(r.BankRemain, r.PotentialWinners, "quality off")
 	potentialWinnersLoop:
 		for r.PotentialWinners > 0 {
 			bankForParticipantLeft := r.BankRemain / float64(potentialWinners)
-			fmt.Println(r.BankRemain, r.Lottery)
 			switch {
 			case r.BankRemain > float64(epicItem) && bankForParticipantLeft >= 9:
-				r.Lottery[epicItem.getItemName()]++
+				r.Lottery.Epic++
 				r.BankRemain -= float64(epicItem)
 				potentialWinners--
 			case r.BankRemain > float64(rareItem) && bankForParticipantLeft >= 4.5:
-				r.Lottery[rareItem.getItemName()]++
+				r.Lottery.Rare++
 				r.BankRemain -= float64(rareItem)
 				potentialWinners--
 			case r.BankRemain > float64(unusualItem) && bankForParticipantLeft >= 2:
-				r.Lottery[unusualItem.getItemName()]++
+				r.Lottery.Unusual++
 				r.BankRemain -= float64(unusualItem)
 				potentialWinners--
 			case r.BankRemain > float64(usualItem) && bankForParticipantLeft >= 1.2:
-				r.Lottery[usualItem.getItemName()]++
+				r.Lottery.Usual++
 				r.BankRemain -= float64(usualItem)
 				potentialWinners--
 			default:
 				break potentialWinnersLoop
 			}
 		}
-		if r.BankRemain > 1 {
+		if r.BankRemain >= 1 {
 			r.generateLotteryObject(true)
 		}
 	}
@@ -127,7 +113,7 @@ func (l LotteryCreator) generateLottery() RespondLotteryObject {
 	respond.BankRemain = respond.Bank
 	respond.PotentialWinners = int(math.Round(
 		float64(respond.ParticipantsCount) * (maxPotentialWinnersPart - (potentialWinnerStep * rand.Float64()))))
-	respond.Lottery = map[string]int{}
+	respond.Lottery = LotteryObject{0, 0, 0, 0, 0}
 	respond.generateLotteryObject(l.QualityOverQuantityMode)
 	return respond
 }
@@ -149,14 +135,16 @@ func getBankPerParticipant(rate int) float64 {
 func CreateLottery(c *gin.Context) {
 	var lotteryCreator LotteryCreator
 	if err := c.BindJSON(&lotteryCreator); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
 	}
 	if lotteryCreator.Rate < 7 {
-		c.AbortWithError(http.StatusBadRequest, lotteryCreatorError("Lottery could be created for rate > 7"))
+		c.JSON(http.StatusBadRequest, gin.H{"error": lotteryCreatorError("Lottery could be created for rate > 7")})
 		return
 	}
 	if lotteryCreator.ParticipantsCount < 10 {
-		c.AbortWithError(http.StatusBadRequest, lotteryCreatorError("Lottery could be created for >= 10 participants."))
+		c.JSON(http.StatusBadRequest, gin.H{"error": lotteryCreatorError("Lottery could be created for >= 10 participants.")})
+		return
 	}
 	respond := lotteryCreator.generateLottery()
 	c.JSON(http.StatusOK, respond)

@@ -59,9 +59,13 @@ func CleanParticipantsText(c *gin.Context) {
 			cleaned += regexp.FindString(before) + "\n"
 			edited += before + " " + after + "\n"
 		} else {
-			cleaned += regexp.FindString(line) + "\n"
+			cleanedStr := regexp.FindString(line)
+			cleanedLine := cleanedStr + "\n"
+			cleaned += cleanedLine
+			if cleanedStr != line {
+				edited += line + "\n"
+			}
 		}
-		continue
 	}
 	c.JSON(http.StatusOK, gin.H{"cleanedText": cleaned, "editedLines": edited})
 }
