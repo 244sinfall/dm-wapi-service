@@ -31,6 +31,8 @@ func main() {
 	router.POST("/generate_charsheet_review", charsheet.GenerateReview)
 	// *Events* Clean Text
 	router.POST("/events/clean_participants_text", events.CleanParticipantsText)
+	// *Events* Create Lottery
+	router.POST("/events/create_lottery", events.CreateLottery)
 	// *Log Cleaner*
 	router.POST("/clean_log", other.CleanLog)
 
