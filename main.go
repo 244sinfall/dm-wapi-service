@@ -1,6 +1,7 @@
 package main
 
 import (
+	"darkmoonWebApi/arbiters"
 	"darkmoonWebApi/charsheet"
 	"darkmoonWebApi/events"
 	"darkmoonWebApi/other"
@@ -33,6 +34,8 @@ func main() {
 	router.POST("/events/clean_participants_text", events.CleanParticipantsText)
 	// *Events* Create Lottery
 	router.POST("/events/create_lottery", events.CreateLottery)
+	// *Arbiters* Base
+	router.POST("/arbiters/rewards_work", arbiters.ArbiterWork)
 	// *Log Cleaner*
 	router.POST("/clean_log", other.CleanLog)
 

@@ -22,13 +22,13 @@ var legitSuffixes = []string{
 	" DW",
 }
 
-func checkForLegitSuffixes(line string) bool {
+func CheckForLegitSuffixes(line string) (bool, string) {
 	for _, suffix := range legitSuffixes {
 		if strings.HasSuffix(line, suffix) {
-			return true
+			return true, suffix
 		}
 	}
-	return false
+	return false, ""
 }
 
 func CleanParticipantsText(c *gin.Context) {
@@ -46,7 +46,7 @@ func CleanParticipantsText(c *gin.Context) {
 		if len(strings.TrimSpace(line)) == 0 {
 			continue
 		}
-		lineHasLegitSuffix := checkForLegitSuffixes(line)
+		lineHasLegitSuffix, _ := CheckForLegitSuffixes(line)
 		if lineHasLegitSuffix {
 			if strings.Count(line, " ") == 1 {
 				cleaned += line + "\n"
