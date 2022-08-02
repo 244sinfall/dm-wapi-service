@@ -45,9 +45,9 @@ type RespondLotteryObject struct {
 }
 
 type LotteryCreator struct {
-	ParticipantsCount       int  `json:"participantsCount"`
-	Rate                    int  `json:"rate"`
-	QualityOverQuantityMode bool `json:"qualityOverQuantityMode"`
+	ParticipantsCount       int  `json:"participantsCount"  binding:"required"`
+	Rate                    int  `json:"rate"  binding:"required"`
+	QualityOverQuantityMode bool `json:"qualityOverQuantityMode"  binding:"required"`
 }
 
 func (r *RespondLotteryObject) generateLotteryObject(qualityOverQuantityMode bool) {
@@ -135,15 +135,15 @@ func getBankPerParticipant(rate int) float64 {
 func CreateLottery(c *gin.Context) {
 	var lotteryCreator LotteryCreator
 	if err := c.BindJSON(&lotteryCreator); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	if lotteryCreator.Rate < 7 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": lotteryCreatorError("Lottery could be created for rate > 7")})
+		c.JSON(http.StatusBadRequest, gin.H{"error": lotteryCreatorError("Lottery could be created for rate 7 and more")})
 		return
 	}
 	if lotteryCreator.ParticipantsCount < 10 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": lotteryCreatorError("Lottery could be created for >= 10 participants.")})
+		c.JSON(http.StatusBadRequest, gin.H{"error": lotteryCreatorError("Lottery could be created for more than 10 participants.")})
 		return
 	}
 	respond := lotteryCreator.generateLottery()

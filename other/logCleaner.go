@@ -148,7 +148,12 @@ mainLoop:
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			fmt.Println("Error when closing temp file: ", err.Error(), "File: ", f.Name())
+		}
+	}()
 	return f, nil
 }
 
@@ -181,6 +186,15 @@ func CleanLog(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename="+cleanedFile.Name())
 	c.Header("Content-Type", "application/octet-stream")
 	c.FileAttachment(cleanedFile.Name(), "output.txt")
-	defer textFile.Close()
-	defer os.Remove(cleanedFile.Name())
+	defer func() {
+		err := textFile.Close()
+		if err != nil {
+			fmt.Println("Error when closing downloaded file: ", err.Error())
+		}
+		err = os.Remove(cleanedFile.Name())
+		if err != nil {
+			fmt.Println("Error when deleting temp file: ", err.Error(), "File: ", cleanedFile.Name())
+		}
+	}()
+
 }

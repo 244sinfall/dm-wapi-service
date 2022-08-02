@@ -9,7 +9,7 @@ import (
 )
 
 type Participants struct {
-	RawText string `json:"RawText"`
+	RawText string `json:"RawText"  binding:"required"`
 }
 
 var legitSuffixes = []string{
