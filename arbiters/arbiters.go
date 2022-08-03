@@ -69,14 +69,14 @@ func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
 		if isLegitSuffix {
 			participantName, _, _ = strings.Cut(participant, " ")
 			if suffix == " W" {
-				if participantsAmount > 5 {
+				if participantsAmount >= 5 {
 					valueToManipulate = defaultValueToManipulate * writerModifier
 				} else {
 					valueToManipulate = defaultValueToManipulate
 					response.ParticipantsModified += participant + " - нет оснований для бонуса писателя\n"
 				}
 			} else if suffix == " WD" || suffix == " DW" {
-				if participantsAmount > 5 {
+				if participantsAmount >= 5 {
 					valueToManipulate = defaultValueToManipulate * crafterAndWriterModifier
 				} else {
 					valueToManipulate = defaultValueToManipulate * crafterModifier
@@ -85,11 +85,11 @@ func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
 			} else if suffix == " D" {
 				valueToManipulate = defaultValueToManipulate * crafterModifier
 			} else if suffix == " M" {
-				if participantsAmount > 5 {
+				if participantsAmount >= 5 {
 					valueToManipulate = defaultValueToManipulate * masterModifier
 				}
 			} else if suffix == " WM" || suffix == " MW" {
-				if participantsAmount > 5 {
+				if participantsAmount >= 5 {
 					valueToManipulate = defaultValueToManipulate * masterAndWriterModifier
 				}
 			}
