@@ -50,15 +50,17 @@ func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
 	participantsAmount := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		isLegitSuffix, suffix := events.CheckForLegitSuffixes(line)
-		if strings.Count(line, " ") == 0 ||
-			(strings.Count(line, " ") == 1 && isLegitSuffix) {
-			participantsSlice = append(participantsSlice, line)
-			if suffix != " M" && suffix != " WM" && suffix != "MW" {
-				participantsAmount += 1
+		if len(strings.TrimSpace(line)) > 1 {
+			isLegitSuffix, suffix := events.CheckForLegitSuffixes(line)
+			if strings.Count(line, " ") == 0 ||
+				(strings.Count(line, " ") == 1 && isLegitSuffix) {
+				participantsSlice = append(participantsSlice, line)
+				if suffix != " M" && suffix != " WM" && suffix != "MW" {
+					participantsAmount += 1
+				}
+			} else {
+				response.ParticipantsModified += line + " - не прошел проверку на корректность\n"
 			}
-		} else {
-			response.ParticipantsModified += line + " - не прошел проверку на корректность\n"
 		}
 	}
 	for _, participant := range participantsSlice {
