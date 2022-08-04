@@ -221,7 +221,7 @@ type Rate struct {
 
 type Review struct {
 	Rates           []Rate `json:"rates" binding:"required"`
-	TotalRate       int    `json:"totalRate"`
+	TotalRate       int    `json:"totalRate" binding:"exists"`
 	CharName        string `json:"charName" binding:"required"`
 	ReviewerProfile string `json:"reviewerProfile" binding:"required"`
 	ReviewerDiscord string `json:"reviewerDiscord" binding:"required"`

@@ -47,7 +47,7 @@ type RespondLotteryObject struct {
 type LotteryCreator struct {
 	ParticipantsCount       int  `json:"participantsCount"  binding:"required"`
 	Rate                    int  `json:"rate"  binding:"required"`
-	QualityOverQuantityMode bool `json:"qualityOverQuantityMode"  binding:"required"`
+	QualityOverQuantityMode bool `json:"qualityOverQuantityMode"  binding:"exists"`
 }
 
 func (r *RespondLotteryObject) generateLotteryObject(qualityOverQuantityMode bool) {
