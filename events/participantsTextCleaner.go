@@ -8,8 +8,13 @@ import (
 	"strings"
 )
 
-type Participants struct {
-	RawText string `json:"RawText"  binding:"required"`
+type ParticipantsRequest struct {
+	RawText string `json:"rawText"  binding:"required"`
+}
+
+type ParticipantsResponse struct {
+	CleanedText string `json:"cleanedText"`
+	EditedLines string `json:"editedLines"`
 }
 
 var legitSuffixes = []string{
@@ -31,41 +36,94 @@ func CheckForLegitSuffixes(line string) (bool, string) {
 	return false, ""
 }
 
-func CleanParticipantsText(c *gin.Context) {
-	var raw Participants
-	var cleaned string
-	var edited string
-	err := c.BindJSON(&raw)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
-	scanner := bufio.NewScanner(strings.NewReader(raw.RawText))
+func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
+	var r ParticipantsResponse
+	var count int
+	scanner := bufio.NewScanner(strings.NewReader(t.RawText))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(strings.TrimSpace(line)) == 0 {
 			continue
 		}
-		lineHasLegitSuffix, _ := CheckForLegitSuffixes(line)
-		if lineHasLegitSuffix {
-			if strings.Count(line, " ") == 1 {
-				cleaned += line + "\n"
+		if strings.Contains(r.CleanedText, line) {
+			r.EditedLines += line + " (дубликат)\n"
+			continue
+		}
+		lineHasLegitSuffix, suffix := CheckForLegitSuffixes(line)
+		if lineHasLegitSuffix && strings.Count(line, " ") == 1 {
+			if strings.Contains(r.CleanedText, strings.TrimSuffix(line, suffix)) {
+				r.EditedLines += line + " (дубликат)\n"
 				continue
 			}
+			if suffix != " M" && suffix != " WM" && suffix != " MW" {
+				count++
+			}
+			r.CleanedText += line + "\n"
+			continue
 		}
 		before, after, found := strings.Cut(line, " ")
 		regexp, _ := regexp2.Compile("([А-яА-Я])+")
 		if found {
-			cleaned += regexp.FindString(before) + "\n"
-			edited += before + " " + after + "\n"
+			fixed := regexp.FindString(before)
+			if strings.Contains(r.CleanedText, fixed) {
+				r.EditedLines += fixed + " (дубликат)\n"
+				continue
+			}
+			count++
+			r.CleanedText += fixed + "\n"
+			r.EditedLines += before + " " + after + "\n"
 		} else {
 			cleanedStr := regexp.FindString(line)
+			if strings.Contains(r.CleanedText, cleanedStr) {
+				r.EditedLines += cleanedStr + " (дубликат)\n"
+				continue
+			}
 			cleanedLine := cleanedStr + "\n"
-			cleaned += cleanedLine
+			r.CleanedText += cleanedLine
+			count++
 			if cleanedStr != line {
-				edited += line + "\n"
+				r.EditedLines += line + "\n"
 			}
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{"cleanedText": cleaned, "editedLines": edited})
+	if count < 5 {
+		var newCleanedText string
+		scanner = bufio.NewScanner(strings.NewReader(r.CleanedText))
+		for scanner.Scan() {
+			participant := scanner.Text()
+			if strings.Contains(newCleanedText, participant) {
+				r.EditedLines += participant + " (дубликат)\n"
+				continue
+			}
+			_, suffix := CheckForLegitSuffixes(participant)
+			if suffix == " M" || suffix == " MW" || suffix == " WM" {
+				r.EditedLines += participant + " (недостаточно участников)\n"
+				continue
+			}
+			if suffix == " DW" || suffix == " WD" {
+				newCleanedText += strings.TrimSuffix(participant, suffix) + " D\n"
+				r.EditedLines += participant + " (недостаточно участников для бонуса)\n"
+				continue
+			}
+			if suffix == " W" {
+				newCleanedText += strings.TrimSuffix(participant, suffix) + "\n"
+				r.EditedLines += participant + " (недостаточно участников для бонуса)"
+				continue
+			}
+			newCleanedText += participant + "\n"
+		}
+		r.CleanedText = newCleanedText
+	}
+	return r
+}
+
+func CleanParticipantsText(c *gin.Context) {
+	var raw ParticipantsRequest
+	err := c.BindJSON(&raw)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	response := cleanRawText(raw)
+	c.JSON(http.StatusOK, response)
 }
