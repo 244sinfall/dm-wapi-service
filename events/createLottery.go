@@ -108,11 +108,11 @@ func (r *RespondLotteryObject) generateLotteryObject(qualityOverQuantityMode boo
 func (l LotteryCreator) generateLottery() RespondLotteryObject {
 	var respond RespondLotteryObject
 	respond.ParticipantsCount = l.ParticipantsCount
-	respond.BankPerParticipant = getBankPerParticipant(respond.ParticipantsCount)
+	respond.BankPerParticipant = getBankPerParticipant(l.Rate)
 	respond.Bank = float64(l.ParticipantsCount) * respond.BankPerParticipant
 	respond.BankRemain = respond.Bank
 	respond.PotentialWinners = int(math.Round(
-		float64(respond.ParticipantsCount) * (maxPotentialWinnersPart - (potentialWinnerStep * rand.Float64()))))
+		float64(l.ParticipantsCount) * (maxPotentialWinnersPart - (potentialWinnerStep * rand.Float64()))))
 	respond.Lottery = LotteryObject{0, 0, 0, 0, 0}
 	respond.generateLotteryObject(l.QualityOverQuantityMode)
 	return respond
