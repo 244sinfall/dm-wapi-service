@@ -3,6 +3,8 @@ package events
 import (
 	"bufio"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"net/http"
 	regexp2 "regexp"
 	"strings"
@@ -42,77 +44,61 @@ func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
 	scanner := bufio.NewScanner(strings.NewReader(t.RawText))
 	for scanner.Scan() {
 		line := scanner.Text()
+		// Empty line handler
 		if len(strings.TrimSpace(line)) == 0 {
 			continue
 		}
-		if strings.Contains(r.CleanedText, line) {
-			r.EditedLines += line + " (дубликат)\n"
-			continue
-		}
-		lineHasLegitSuffix, suffix := CheckForLegitSuffixes(line)
-		if lineHasLegitSuffix && strings.Count(line, " ") == 1 {
-			if strings.Contains(r.CleanedText, strings.TrimSuffix(line, suffix)) {
-				r.EditedLines += line + " (дубликат)\n"
-				continue
-			}
-			if suffix != " M" && suffix != " WM" && suffix != " MW" {
-				count++
-			}
-			r.CleanedText += line + "\n"
-			continue
-		}
-		before, after, found := strings.Cut(line, " ")
-		regexp, _ := regexp2.Compile("([А-яА-Я])+")
+		// Capitalize name + regexp handler
+		regexp, _ := regexp2.Compile("([А-яА-Я])+( [WDM]{1,2})?")
+		foundRegexp := regexp.FindString(line)
+		makeTitle := cases.Title(language.Russian)
+		name, suffix, found := strings.Cut(foundRegexp, " ")
+		foundRegexp = makeTitle.String(name)
 		if found {
-			fixed := regexp.FindString(before)
-			if strings.Contains(r.CleanedText, fixed) {
-				r.EditedLines += fixed + " (дубликат)\n"
-				continue
-			}
-			count++
-			r.CleanedText += fixed + "\n"
-			r.EditedLines += before + " " + after + "\n"
-		} else {
-			cleanedStr := regexp.FindString(line)
-			if strings.Contains(r.CleanedText, cleanedStr) {
-				r.EditedLines += cleanedStr + " (дубликат)\n"
-				continue
-			}
-			cleanedLine := cleanedStr + "\n"
-			r.CleanedText += cleanedLine
-			count++
-			if cleanedStr != line {
-				r.EditedLines += line + "\n"
-			}
+			foundRegexp += " " + suffix
 		}
+		if strings.Contains(r.CleanedText, name) {
+			r.EditedLines += foundRegexp + " (дубликат)\n"
+			continue
+		}
+		if foundRegexp != line {
+			r.EditedLines += line + " (изменено под формат)\n"
+		}
+		if !found || (suffix != "M" && suffix != "WM" && suffix != "MW") {
+			count++
+		}
+		r.CleanedText += foundRegexp + "\n"
+	}
+	if r.EditedLines != "" {
+		r.EditedLines = "Обработка соответствия строк формату:\n" + r.EditedLines + "\n"
 	}
 	if count < 5 {
 		var newCleanedText string
+		var newEditedLines string
 		scanner = bufio.NewScanner(strings.NewReader(r.CleanedText))
 		for scanner.Scan() {
 			participant := scanner.Text()
-			if strings.Contains(newCleanedText, participant) {
-				r.EditedLines += participant + " (дубликат)\n"
-				continue
-			}
 			_, suffix := CheckForLegitSuffixes(participant)
 			if suffix == " M" || suffix == " MW" || suffix == " WM" {
-				r.EditedLines += participant + " (недостаточно участников)\n"
+				newEditedLines += participant + " (недостаточно участников)\n"
 				continue
 			}
 			if suffix == " DW" || suffix == " WD" {
 				newCleanedText += strings.TrimSuffix(participant, suffix) + " D\n"
-				r.EditedLines += participant + " (недостаточно участников для бонуса)\n"
+				newEditedLines += participant + " (недостаточно участников для бонуса)\n"
 				continue
 			}
 			if suffix == " W" {
 				newCleanedText += strings.TrimSuffix(participant, suffix) + "\n"
-				r.EditedLines += participant + " (недостаточно участников для бонуса)"
+				newEditedLines += participant + " (недостаточно участников для бонуса)\n"
 				continue
 			}
 			newCleanedText += participant + "\n"
 		}
 		r.CleanedText = newCleanedText
+		if newEditedLines != "" {
+			r.EditedLines += "Обработка соблюдения условий:\n" + newEditedLines
+		}
 	}
 	return r
 }

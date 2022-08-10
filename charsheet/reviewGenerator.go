@@ -227,7 +227,12 @@ type Review struct {
 	ReviewerDiscord string `json:"reviewerDiscord" binding:"required"`
 }
 
-func getReviewText(review Review) string {
+type ReviewOutput struct {
+	Review string `json:"review"`
+}
+
+func (review Review) getReviewResponse() ReviewOutput {
+	var outputObject ReviewOutput
 	output := reviewStartPart
 	var rejected bool
 	for _, rate := range review.Rates {
@@ -244,7 +249,8 @@ func getReviewText(review Review) string {
 	output += fmt.Sprintf("<p style=\"text-align: justify;\">Если у Вас остались вопросы, касаемо вынесенного "+
 		"решения, то Вы можете обратиться ко мне в личные сообщения на сайте (%v), в Discord (%v) для получения"+
 		" ответов на них.</p><p style=\"text-align: justify;\">С уважением,</p>", review.ReviewerProfile, review.ReviewerDiscord)
-	return output
+	outputObject.Review = output
+	return outputObject
 }
 
 func GenerateReview(c *gin.Context) {
@@ -258,5 +264,5 @@ func GenerateReview(c *gin.Context) {
 		reviewObject.ReviewerDiscord == "" || reviewObject.ReviewerProfile == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Not all required fields provided"})
 	}
-	c.JSON(http.StatusOK, gin.H{"review": getReviewText(reviewObject)})
+	c.JSON(http.StatusOK, reviewObject.getReviewResponse())
 }
