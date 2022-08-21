@@ -55,7 +55,7 @@ func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
 			if strings.Count(line, " ") == 0 ||
 				(strings.Count(line, " ") == 1 && isLegitSuffix) {
 				participantsSlice = append(participantsSlice, line)
-				if suffix != " M" && suffix != " WM" && suffix != "MW" {
+				if suffix != " M" && suffix != " WM" && suffix != " MW" {
 					participantsAmount += 1
 				}
 			} else {
