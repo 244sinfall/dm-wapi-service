@@ -49,7 +49,7 @@ func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
 			continue
 		}
 		// Capitalize name + regexp handler
-		regexp, _ := regexp2.Compile("([А-яА-Я])+( [WDM]{1,2})?")
+		regexp, _ := regexp2.Compile("([А-яА-ЯЁё])+( [WDM]{1,2})?")
 		foundRegexp := regexp.FindString(line)
 		makeTitle := cases.Title(language.Russian)
 		name, suffix, found := strings.Cut(foundRegexp, " ")
