@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"darkmoonWebApi/arbiters"
 	"darkmoonWebApi/charsheet"
+	"darkmoonWebApi/economics"
 	"darkmoonWebApi/events"
 	"darkmoonWebApi/other"
+	firebase "firebase.google.com/go"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/api/option"
+	"log"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -25,6 +30,14 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+	var opt = option.WithCredentialsFile("darkmoon-web-api-2-firebase-adminsdk-7x7ol-b33aadf8c6.json")
+	var ctx = context.Background()
+	var app, err = firebase.NewApp(ctx, nil, opt)
+	firestore, err := app.Firestore(ctx)
+	if err != nil {
+		log.Printf("error initializing firebase %v\n", err)
+	}
+	go economics.ChecksScheduler(firestore, ctx, false)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.Use(CORSMiddleware())
@@ -38,9 +51,12 @@ func main() {
 	router.POST("/arbiters/rewards_work", arbiters.ArbiterWork)
 	// *Log Cleaner*
 	router.POST("/clean_log", other.CleanLog)
-
+	// *Economics* Get Checks
+	router.GET("/economics/get_checks", func(c *gin.Context) {
+		economics.ReceiveChecks(c, firestore, ctx)
+	})
 	//err := router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
-	err := router.Run("127.0.0.1:8000")
+	err = router.Run("127.0.0.1:8000")
 	if err != nil {
 		return
 	}
