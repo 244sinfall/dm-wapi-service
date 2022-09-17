@@ -13,7 +13,7 @@ const cacheFrequency = 30 * time.Minute
 const fieldsInOneDocumentDb = 500
 
 type cachedChecks struct {
-	checks    []Check
+	checks    []APIResponseCheck
 	updatedAt time.Time
 	updating  bool
 }
@@ -21,9 +21,22 @@ type cachedChecks struct {
 var CachedChecks cachedChecks
 
 func UploadChecksToDatabase(f *firestore.Client, ctx context.Context) error {
-	checkMap := make(map[string]Check, fieldsInOneDocumentDb)
+	checkMap := make(map[string]APIResponseCheck, fieldsInOneDocumentDb)
 	counter := 1
 	higherBound := CachedChecks.checks[0].Id //12620
+	documents, err := f.Collection("checks").Documents(ctx).GetAll()
+	if err != nil {
+		return err
+	}
+	for _, doc := range documents {
+		if !strings.Contains(doc.Ref.Path, "info") {
+			_, err := f.Collection("checks").Doc(doc.Ref.ID).Delete(ctx)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+	fmt.Println("Old cache deleted.")
 	batch := f.Batch()
 	for idx, check := range CachedChecks.checks {
 		checkMap[strconv.Itoa(check.Id)] = check
@@ -33,7 +46,7 @@ func UploadChecksToDatabase(f *firestore.Client, ctx context.Context) error {
 			docName := fmt.Sprintf("%d-%d", lowerBound, higherBound)
 			batch.Set(f.Collection("checks").Doc(docName), checkMap)
 			higherBound = lowerBound - 1
-			checkMap = make(map[string]Check)
+			checkMap = make(map[string]APIResponseCheck)
 			counter = 1
 		}
 	}
@@ -41,7 +54,7 @@ func UploadChecksToDatabase(f *firestore.Client, ctx context.Context) error {
 		"updatedAt": time.Now(),
 		"count":     CachedChecks.checks[0].Id,
 	})
-	_, err := batch.Commit(ctx)
+	_, err = batch.Commit(ctx)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -59,7 +72,7 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 	updatedAt := checkInfo["updatedAt"].(time.Time)
 	checkCount := checkInfo["count"].(int64)
 	CachedChecks = cachedChecks{
-		checks:    make([]Check, checkCount),
+		checks:    make([]APIResponseCheck, checkCount),
 		updatedAt: updatedAt,
 		updating:  true,
 	}
@@ -69,7 +82,7 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 	}
 	for _, doc := range documents {
 		if !strings.Contains(doc.Ref.Path, "info") {
-			rawChecks := make(map[string]Check, fieldsInOneDocumentDb)
+			rawChecks := make(map[string]APIResponseCheck, fieldsInOneDocumentDb)
 			err := doc.DataTo(&rawChecks)
 			if err != nil {
 				return err
@@ -102,9 +115,11 @@ func ParseAndDeployNewChecks(f *firestore.Client, ctx context.Context) error {
 		fmt.Println("Unable to parse checks from Darkmoon. Error: " + err.Error())
 		return err
 	} else {
-		CachedChecks.checks = parsedChecks
-		CachedChecks.updatedAt = time.Now()
-		CachedChecks.updating = false
+		CachedChecks = cachedChecks{
+			checks:    parsedChecks,
+			updatedAt: time.Now(),
+			updating:  false,
+		}
 		err := UploadChecksToDatabase(f, ctx)
 		if err != nil {
 			fmt.Println("Unable to upload checks to database with error: ", err.Error())
@@ -121,11 +136,12 @@ func ChecksScheduler(f *firestore.Client, ctx context.Context, ping bool) {
 		fmt.Println("Unable to fetch checks from DB with error: " + err.Error())
 	}
 	for {
-		if time.Now().Sub(CachedChecks.updatedAt) > cacheFrequency {
+		if time.Now().Sub(CachedChecks.updatedAt) > cacheFrequency || err != nil {
 			err := ParseAndDeployNewChecks(f, ctx)
 			if err != nil {
 				fmt.Println("Unable to parse new checks! " + err.Error())
 			}
+			err = nil
 		} else {
 			if ping {
 				return

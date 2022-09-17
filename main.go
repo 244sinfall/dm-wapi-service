@@ -55,7 +55,7 @@ func main() {
 	router.GET("/economics/get_checks", func(c *gin.Context) {
 		economics.ReceiveChecks(c, firestore, ctx)
 	})
-	//err := router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
+	//err = router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
 	err = router.Run("127.0.0.1:8000")
 	if err != nil {
 		return

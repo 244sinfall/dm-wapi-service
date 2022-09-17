@@ -3,10 +3,9 @@ package economics
 import (
 	"cloud.google.com/go/firestore"
 	"context"
-	cloudflarebp "github.com/DaRealFreak/cloudflare-bp-go"
-	"github.com/PuerkitoBio/goquery"
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/headzoo/surf.v1"
 	"net/http"
 	"sort"
 	"strconv"
@@ -14,72 +13,44 @@ import (
 	"time"
 )
 
-type Check struct {
-	Id          int      `firestore:"Id,omitempty"`
-	Date        string   `firestore:"Date,omitempty"`
-	Owner       string   `firestore:"Owner,omitempty"`
-	CheckType   string   `firestore:"type,omitempty"`
-	Money       int      `firestore:"Money,omitempty"`
-	Name        string   `firestore:"Name,omitempty"`
-	Description string   `firestore:"Description,omitempty"`
-	Body        []string `firestore:"Body,omitempty"`
-	Status      string   `firestore:"Status,omitempty"`
-	Gm          string   `firestore:"Gm,omitempty"`
+type APIResponseItem struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
+}
+
+type APIResponseCheck struct {
+	Id       int               `json:"id"`
+	Date     string            `json:"date"`
+	Sender   string            `json:"sender"`   // owner
+	Receiver string            `json:"receiver"` // checktype
+	Subject  string            `json:"subject"`  // name
+	Body     string            `json:"body"`     // description
+	Money    int               `json:"money"`
+	GmName   string            `json:"gmName"`
+	Status   string            `json:"status"`
+	Items    []APIResponseItem `json:"items"`
 }
 
 const defaultCheckCount = 13000
 
-func ParseChecksFromDarkmoon() ([]Check, error) {
-	browser := surf.NewBrowser()
-	browser.SetUserAgent("PostmanRuntime/7.29.2")
-	browser.SetTransport(cloudflarebp.AddCloudFlareByPass(&http.Transport{}))
-	err := browser.Open("https://dm.rolevik.site/mock.html")
+func ParseChecksFromDarkmoon() ([]APIResponseCheck, error) {
+	newChecks := make([]APIResponseCheck, 0, defaultCheckCount)
+	response, err := http.Get("")
 	if err != nil {
-		return []Check{}, err
+		return nil, err
 	}
-	table := browser.State().Dom.Find("table") //Child 1 - headers, child 2 - contents
-	checks := make([]Check, 0, defaultCheckCount)
-	table.Children().Next().Children().Each(func(i int, sel *goquery.Selection) {
-		data := sel.Children()
-		container := data.Find(".container-items")
-		if container.Size() != 0 {
-			container.Children().Each(func(i int, item *goquery.Selection) {
-				if len(checks) > 0 {
-					checks[len(checks)-1].Body = append(checks[len(checks)-1].Body, item.Text())
-				}
-			})
-		} else {
-			checkCells := data.Contents().Nodes
-			checkId, _ := strconv.Atoi(checkCells[0].Data)
-			checkMoney, _ := strconv.Atoi(checkCells[4].Data)
-			var gm, status, description string
-			if len(checkCells) == 8 {
-				status = checkCells[6].Data
-				gm = checkCells[7].Data
-			}
-			if len(checkCells) == 9 {
-				status = checkCells[7].Data
-				gm = checkCells[8].Data
-				description = checkCells[6].Data
-			}
-			checks = append(checks, Check{
-				Id:          checkId,
-				Date:        checkCells[1].Data,
-				Owner:       checkCells[2].Data,
-				CheckType:   checkCells[3].Data,
-				Money:       checkMoney,
-				Name:        checkCells[5].Data,
-				Description: description,
-				Body:        make([]string, 0, 1),
-				Status:      status,
-				Gm:          gm,
-			})
-		}
-	})
-	return checks, nil
+	defer func() {
+		_ = response.Body.Close()
+	}()
+	decoder := json.NewDecoder(response.Body)
+	err = decoder.Decode(&newChecks)
+	if err != nil {
+		return []APIResponseCheck{}, err
+	}
+	return newChecks, nil
 }
 
-func filterChecksStatus(c []Check, status string) []Check {
+func filterChecksStatus(c []APIResponseCheck, status string) []APIResponseCheck {
 	var statusName string
 	switch status {
 	case "open":
@@ -91,7 +62,7 @@ func filterChecksStatus(c []Check, status string) []Check {
 	default:
 		return c
 	}
-	newChecks := make([]Check, 0, len(c)/5)
+	newChecks := make([]APIResponseCheck, 0, len(c)/5)
 	for _, check := range c {
 		if check.Status == statusName {
 			newChecks = append(newChecks, check)
@@ -100,7 +71,7 @@ func filterChecksStatus(c []Check, status string) []Check {
 	return newChecks
 }
 
-func sortChecks(c []Check, sortBy string, ascending bool) {
+func sortChecks(c []APIResponseCheck, sortBy string, ascending bool) {
 	switch sortBy {
 	case "money":
 		sort.Slice(c, func(i, j int) bool {
@@ -128,15 +99,15 @@ func sortChecks(c []Check, sortBy string, ascending bool) {
 	}
 }
 
-func filterChecks(c []Check, phrase string) []Check {
+func filterChecks(c []APIResponseCheck, phrase string) []APIResponseCheck {
 	if len(c) == 0 {
 		return c
 	}
-	newChecks := make([]Check, 0, len(c)/10)
+	newChecks := make([]APIResponseCheck, 0, len(c)/10)
 	for _, check := range c {
-		if strings.Contains(strconv.Itoa(check.Id), phrase) || strings.Contains(check.Gm, phrase) ||
-			strings.Contains(check.Name, phrase) || strings.Contains(check.Owner, phrase) ||
-			strings.Contains(check.Description, phrase) {
+		if strings.Contains(strconv.Itoa(check.Id), phrase) || strings.Contains(check.GmName, phrase) ||
+			strings.Contains(check.Subject, phrase) || strings.Contains(check.Sender, phrase) ||
+			strings.Contains(check.Body, phrase) {
 			newChecks = append(newChecks, check)
 		}
 	}
@@ -145,12 +116,13 @@ func filterChecks(c []Check, phrase string) []Check {
 
 func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 	limit, _ := strconv.Atoi(c.Query("limit"))
-	skip, _ := strconv.Atoi(c.Query("skip")) //
+	skip, _ := strconv.Atoi(c.Query("skip"))
 	search := c.Query("search")
 	status := c.Query("status")
 	sortMethod := c.Query("sortBy")           //
 	sortDirection := c.Query("sortDirection") //
 	force := c.Query("force")
+	fmt.Println(CachedChecks.checks[0].Id)
 	if CachedChecks.updating {
 		c.JSON(500, gin.H{"error": "Checks are currently unavailable due to cache update"})
 		return
@@ -184,7 +156,7 @@ func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 		if len(sentChecks)-1 > skip {
 			sentChecks = sentChecks[skip:]
 		} else {
-			sentChecks = []Check{}
+			sentChecks = []APIResponseCheck{}
 		}
 	}
 	if limit != 0 {
