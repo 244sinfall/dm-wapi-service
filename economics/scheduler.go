@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -15,10 +16,24 @@ const fieldsInOneDocumentDb = 500
 type cachedChecks struct {
 	checks    []APIResponseCheck
 	updatedAt time.Time
+	types     []string
 	updating  bool
 }
 
 var CachedChecks cachedChecks
+
+func findCheckTypes(c []APIResponseCheck) []string {
+	checkTypes := make(map[string]struct{}, 10)
+	for _, v := range c {
+		checkTypes[v.Receiver] = struct{}{}
+	}
+	checkTypesSlice := make([]string, 0, len(checkTypes))
+	for k := range checkTypes {
+		checkTypesSlice = append(checkTypesSlice, k)
+	}
+	sort.Strings(checkTypesSlice)
+	return checkTypesSlice
+}
 
 func UploadChecksToDatabase(f *firestore.Client, ctx context.Context) error {
 	checkMap := make(map[string]APIResponseCheck, fieldsInOneDocumentDb)
@@ -53,6 +68,7 @@ func UploadChecksToDatabase(f *firestore.Client, ctx context.Context) error {
 	batch.Set(f.Doc("checks/info"), map[string]interface{}{
 		"updatedAt": time.Now(),
 		"count":     CachedChecks.checks[0].Id,
+		"types":     CachedChecks.types,
 	})
 	_, err = batch.Commit(ctx)
 	if err != nil {
@@ -74,6 +90,7 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 	CachedChecks = cachedChecks{
 		checks:    make([]APIResponseCheck, checkCount),
 		updatedAt: updatedAt,
+		types:     nil,
 		updating:  true,
 	}
 	documents, err := f.Collection("checks").Documents(ctx).GetAll()
@@ -87,7 +104,6 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-
 			for k, v := range rawChecks {
 				checkId, err := strconv.Atoi(k)
 				if err != nil {
@@ -95,9 +111,10 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 					continue
 				}
 				CachedChecks.checks[checkId-1] = v
-
 			}
+			CachedChecks.types = findCheckTypes(CachedChecks.checks)
 		}
+
 	}
 	CachedChecks.updating = false
 	fmt.Println("Received checks from database successfully")
@@ -107,6 +124,7 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 func ParseAndDeployNewChecks(f *firestore.Client, ctx context.Context) error {
 	CachedChecks = cachedChecks{
 		checks:    nil,
+		types:     nil,
 		updatedAt: time.Now(),
 		updating:  true,
 	}
@@ -118,6 +136,7 @@ func ParseAndDeployNewChecks(f *firestore.Client, ctx context.Context) error {
 		CachedChecks = cachedChecks{
 			checks:    parsedChecks,
 			updatedAt: time.Now(),
+			types:     findCheckTypes(parsedChecks),
 			updating:  false,
 		}
 		err := UploadChecksToDatabase(f, ctx)

@@ -49,6 +49,15 @@ func ParseChecksFromDarkmoon() ([]APIResponseCheck, error) {
 	}
 	return newChecks, nil
 }
+func filterChecksCategory(c []APIResponseCheck, category string) []APIResponseCheck {
+	newChecks := make([]APIResponseCheck, 0, len(c)/5)
+	for _, check := range c {
+		if check.Receiver == category {
+			newChecks = append(newChecks, check)
+		}
+	}
+	return newChecks
+}
 
 func filterChecksStatus(c []APIResponseCheck, status string) []APIResponseCheck {
 	var statusName string
@@ -107,7 +116,7 @@ func filterChecks(c []APIResponseCheck, phrase string) []APIResponseCheck {
 	for _, check := range c {
 		if strings.Contains(strconv.Itoa(check.Id), phrase) || strings.Contains(check.GmName, phrase) ||
 			strings.Contains(check.Subject, phrase) || strings.Contains(check.Sender, phrase) ||
-			strings.Contains(check.Body, phrase) {
+			strings.Contains(check.Body, phrase) || strings.Contains(check.Receiver, phrase) {
 			newChecks = append(newChecks, check)
 		}
 	}
@@ -118,6 +127,7 @@ func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 	limit, _ := strconv.Atoi(c.Query("limit"))
 	skip, _ := strconv.Atoi(c.Query("skip"))
 	search := c.Query("search")
+	category := c.Query("category")
 	status := c.Query("status")
 	sortMethod := c.Query("sortBy")           //
 	sortDirection := c.Query("sortDirection") //
@@ -144,6 +154,10 @@ func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 	}
 	sentChecks := CachedChecks.checks
 	filteredCount := len(sentChecks)
+	if category != "" {
+		sentChecks = filterChecksCategory(sentChecks, category)
+		filteredCount = len(sentChecks)
+	}
 	if status != "" {
 		sentChecks = filterChecksStatus(sentChecks, status)
 		filteredCount = len(sentChecks)
@@ -169,5 +183,5 @@ func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 		sortDir = true
 	}
 	sortChecks(sentChecks, sortMethod, sortDir)
-	c.JSON(200, gin.H{"checks": sentChecks, "count": len(CachedChecks.checks), "filteredCount": filteredCount, "updatedAt": CachedChecks.updatedAt})
+	c.JSON(200, gin.H{"checks": sentChecks, "count": len(CachedChecks.checks), "filteredCount": filteredCount, "updatedAt": CachedChecks.updatedAt, "types": CachedChecks.types})
 }
