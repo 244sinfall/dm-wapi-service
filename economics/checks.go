@@ -4,7 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
-	"fmt"
+	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"sort"
@@ -30,6 +30,8 @@ type APIResponseCheck struct {
 	Status   string            `json:"status"`
 	Items    []APIResponseItem `json:"items"`
 }
+
+const gmPermission = 1
 
 const defaultCheckCount = 13000
 
@@ -123,7 +125,7 @@ func filterChecks(c []APIResponseCheck, phrase string) []APIResponseCheck {
 	return newChecks
 }
 
-func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
+func ReceiveChecks(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
 	limit, _ := strconv.Atoi(c.Query("limit"))
 	skip, _ := strconv.Atoi(c.Query("skip"))
 	search := c.Query("search")
@@ -132,7 +134,6 @@ func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 	sortMethod := c.Query("sortBy")           //
 	sortDirection := c.Query("sortDirection") //
 	force := c.Query("force")
-	fmt.Println(CachedChecks.checks[0].Id)
 	if CachedChecks.updating {
 		c.JSON(500, gin.H{"error": "Checks are currently unavailable due to cache update"})
 		return
@@ -141,6 +142,13 @@ func ReceiveChecks(c *gin.Context, f *firestore.Client, ctx context.Context) {
 		ChecksScheduler(f, ctx, true)
 	}
 	if force != "" {
+		token, _ := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
+		permInfo, _ := f.Doc("permissions/" + token.UID).Get(ctx)
+		permission := permInfo.Data()["permission"].(int64)
+		if permission < gmPermission {
+			c.JSON(400, gin.H{"error": "Not enough permissions"})
+			return
+		}
 		if time.Now().Sub(CachedChecks.updatedAt) < 5*time.Minute {
 			c.JSON(400, gin.H{"error": "Force update is available if cached checks are older than 5 minutes", "updatedAt": CachedChecks.updatedAt})
 			return

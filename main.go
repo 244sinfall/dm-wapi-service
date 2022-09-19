@@ -4,6 +4,7 @@ import (
 	"context"
 	"darkmoonWebApi/arbiters"
 	"darkmoonWebApi/charsheet"
+	claimed_items "darkmoonWebApi/claimed-items"
 	"darkmoonWebApi/economics"
 	"darkmoonWebApi/events"
 	"darkmoonWebApi/other"
@@ -18,7 +19,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE, GET, PUT")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -34,10 +35,12 @@ func main() {
 	var ctx = context.Background()
 	var app, err = firebase.NewApp(ctx, nil, opt)
 	firestore, err := app.Firestore(ctx)
+	auth, err := app.Auth(ctx)
 	if err != nil {
 		log.Printf("error initializing firebase %v\n", err)
 	}
 	go economics.ChecksScheduler(firestore, ctx, false)
+	claimed_items.GetClaimedItemsFromDatabase(firestore, ctx)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.Use(CORSMiddleware())
@@ -53,10 +56,23 @@ func main() {
 	router.POST("/clean_log", other.CleanLog)
 	// *Economics* Get Checks
 	router.GET("/economics/get_checks", func(c *gin.Context) {
-		economics.ReceiveChecks(c, firestore, ctx)
+		economics.ReceiveChecks(c, auth, firestore, ctx)
 	})
-	//err = router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
-	err = router.Run("127.0.0.1:8000")
+	router.GET("/claimed_items/get_items", claimed_items.ReceiveClaimedItems)
+	router.DELETE("/claimed_items/delete/:id", func(c *gin.Context) {
+		claimed_items.DeleteClaimedItem(c, auth, firestore, ctx)
+	})
+	router.POST("/claimed_items/update/:id", func(c *gin.Context) {
+		claimed_items.UpdateClaimedItem(c, auth, firestore, ctx)
+	})
+	router.POST("/claimed_items/approve/:id", func(c *gin.Context) {
+		claimed_items.ApproveClaimedItem(c, auth, firestore, ctx)
+	})
+	router.POST("/claimed_items/create", func(c *gin.Context) {
+		claimed_items.AddClaimedItem(c, auth, firestore, ctx)
+	})
+	err = router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
+	//err = router.Run("127.0.0.1:8000")
 	if err != nil {
 		return
 	}
