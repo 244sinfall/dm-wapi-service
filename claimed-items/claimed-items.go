@@ -130,6 +130,7 @@ func (c *ClaimedItemsResponse) delete(id string, f *firestore.Client, ctx contex
 	}
 	itemToDelete := new(ClaimedItem)
 	err = data.DataTo(itemToDelete)
+	itemToDelete.Id = id
 	if err != nil {
 		return err
 	}

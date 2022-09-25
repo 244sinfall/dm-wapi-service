@@ -16,6 +16,7 @@ type ParticipantsRequest struct {
 
 type ParticipantsResponse struct {
 	CleanedText string `json:"cleanedText"`
+	Count       int    `json:"cleanedCount"`
 	EditedLines string `json:"editedLines"`
 }
 
@@ -72,6 +73,7 @@ func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
 	if r.EditedLines != "" {
 		r.EditedLines = "Обработка соответствия строк формату:\n" + r.EditedLines + "\n"
 	}
+	r.Count = count
 	if count < 5 {
 		var newCleanedText string
 		var newEditedLines string
