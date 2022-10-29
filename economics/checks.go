@@ -7,6 +7,7 @@ import (
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,7 +38,7 @@ const defaultCheckCount = 13000
 
 func ParseChecksFromDarkmoon() ([]APIResponseCheck, error) {
 	newChecks := make([]APIResponseCheck, 0, defaultCheckCount)
-	response, err := http.Get("")
+	response, err := http.Get(os.Getenv("DM_CHECKS_API_ADDRESS"))
 	if err != nil {
 		return nil, err
 	}

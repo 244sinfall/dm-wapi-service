@@ -110,7 +110,7 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 					fmt.Println(err)
 					continue
 				}
-				CachedChecks.checks[checkId-1] = v
+				CachedChecks.checks[int(checkCount)-checkId] = v
 			}
 			CachedChecks.types = findCheckTypes(CachedChecks.checks)
 		}

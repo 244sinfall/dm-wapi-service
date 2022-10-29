@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/option"
 	"log"
+	"os"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -31,7 +32,7 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func main() {
-	var opt = option.WithCredentialsFile("darkmoon-web-api-2-firebase-adminsdk-7x7ol-b33aadf8c6.json")
+	var opt = option.WithCredentialsFile(os.Getenv("FIREBASE_CREDENTIALS_FILE"))
 	var ctx = context.Background()
 	var app, err = firebase.NewApp(ctx, nil, opt)
 	firestore, err := app.Firestore(ctx)
