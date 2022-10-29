@@ -26,13 +26,20 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-        
+
+#    - name: Deploy to dm.rolevik.site
+#      uses: easingthemes/ssh-deploy@v3.0.1
+#      env:
+#        SSH_PRIVATE_KEY: ${{ secrets.SSH }}
+#        SOURCE: "bin/"
+#        REMOTE_HOST: ${{ secrets.HOST }}
+#        REMOTE_USER: ${{ secrets.USERNAME }}
+#        TARGET: ${{ secrets.TARGET }}
+
     - name: Re-launching proccess on the server
-      uses: appleboy/ssh-action@master
+      uses: garygrossgarten/github-action-ssh@release
       with:
+        command: "cd /home/user | touch test.txt"
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH }}
-        port: ${{ secrets.PORT }}
-        script: |
-         whoami
+        privateKey: ${{ secrets.SSH}}
