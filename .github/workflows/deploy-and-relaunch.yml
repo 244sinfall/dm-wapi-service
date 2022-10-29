@@ -39,7 +39,7 @@ jobs:
     - name: Re-launching proccess on the server
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: "cd /home/user && touch test.txt"
+        command: ${{ secrets.EXECUTION }}
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         privateKey: ${{ secrets.SSH}}
