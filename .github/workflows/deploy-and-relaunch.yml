@@ -45,7 +45,7 @@ jobs:
         TARGET: ${{ secrets.TARGET }}
 
     - name: Launching process on the server
-      uses: 244sinfall/github-action-ssh@master
+      uses: garygrossgarten/github-action-ssh@release
       with:
         command: ${{ secrets.EXECUTION }}
         host: ${{ secrets.HOST }}
