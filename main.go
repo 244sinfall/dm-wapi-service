@@ -9,6 +9,7 @@ import (
 	"darkmoonWebApi/events"
 	"darkmoonWebApi/other"
 	firebase "firebase.google.com/go"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/option"
 	"log"
@@ -75,7 +76,7 @@ func main() {
 	err = router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
 	//err = router.Run("127.0.0.1:8000")
 	if err != nil {
-		return
+		fmt.Println(err)
 	}
 
 }
