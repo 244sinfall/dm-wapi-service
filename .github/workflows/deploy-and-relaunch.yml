@@ -47,7 +47,7 @@ jobs:
     - name: Launching process on the server
       uses: 244sinfall/github-action-ssh@master
       with:
-        command: cd /home/user/dmapi; chmod +x dmWebApiAutomated; ./dmWebApiAutomated &
+        command: ${{ secrets.EXECUTION }}
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         privateKey: ${{ secrets.SSH}}
