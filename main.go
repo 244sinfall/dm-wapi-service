@@ -32,7 +32,7 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func main() {
-	var opt = option.WithCredentialsFile(os.Getenv("FIREBASE_CREDENTIALS_FILE"))
+	var opt = option.WithCredentialsFile(os.Getenv("DM_API_FIREBASE_CREDENTIALS_FILE"))
 	var ctx = context.Background()
 	var app, err = firebase.NewApp(ctx, nil, opt)
 	firestore, err := app.Firestore(ctx)

@@ -27,7 +27,15 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    - name: Deploy to dm.rolevik.site
+    - name: Killing process on the server
+      uses: garygrossgarten/github-action-ssh@release
+      with:
+        command: ${{ secrets.KILL }}
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        privateKey: ${{ secrets.SSH}}
+
+    - name: Deploy to the server
       uses: easingthemes/ssh-deploy@v3.0.1
       env:
         SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
@@ -36,7 +44,7 @@ jobs:
         REMOTE_USER: ${{ secrets.USERNAME }}
         TARGET: ${{ secrets.TARGET }}
 
-    - name: Re-launching proccess on the server
+    - name: Launching process on the server
       uses: garygrossgarten/github-action-ssh@release
       with:
         command: ${{ secrets.EXECUTION }}

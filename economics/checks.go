@@ -38,7 +38,7 @@ const defaultCheckCount = 13000
 
 func ParseChecksFromDarkmoon() ([]APIResponseCheck, error) {
 	newChecks := make([]APIResponseCheck, 0, defaultCheckCount)
-	response, err := http.Get(os.Getenv("DM_CHECKS_API_ADDRESS"))
+	response, err := http.Get(os.Getenv("DM_API_CHECKS_ADDRESS"))
 	if err != nil {
 		return nil, err
 	}
