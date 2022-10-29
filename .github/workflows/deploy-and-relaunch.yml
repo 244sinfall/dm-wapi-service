@@ -26,15 +26,6 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-      
-    - name: Deploy to dm.rolevik.site
-      uses: easingthemes/ssh-deploy@v3.0.1
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH }}
-        SOURCE: "bin/"
-        REMOTE_HOST: ${{ secrets.HOST }}
-        REMOTE_USER: ${{ secrets.USERNAME }}
-        TARGET: ${{ secrets.TARGET }}
         
     - name: Re-launching proccess on the server
       uses: appleboy/ssh-action@master
