@@ -373,5 +373,6 @@ func DeleteClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 }
 
 func ReceiveClaimedItems(c *gin.Context) {
-	c.JSON(200, gin.H{"result": gin.H{"legendary": ClaimedItems.legendary, "epic": ClaimedItems.epic, "rare": ClaimedItems.rare, "green": ClaimedItems.green, "other": ClaimedItems.other}})
+	c.JSON(200, gin.H{"result": "no result"})
+	//c.JSON(200, gin.H{"result": gin.H{"legendary": ClaimedItems.legendary, "epic": ClaimedItems.epic, "rare": ClaimedItems.rare, "green": ClaimedItems.green, "other": ClaimedItems.other}})
 }
