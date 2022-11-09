@@ -122,15 +122,11 @@ func getChecksFromDatabase(f *firestore.Client, ctx context.Context) error {
 }
 
 func ParseAndDeployNewChecks(f *firestore.Client, ctx context.Context) error {
-	CachedChecks = cachedChecks{
-		checks:    nil,
-		types:     nil,
-		updatedAt: time.Now(),
-		updating:  true,
-	}
+	CachedChecks.updating = true
 	parsedChecks, err := ParseChecksFromDarkmoon()
 	if err != nil {
 		fmt.Println("Unable to parse checks from Darkmoon. Error: " + err.Error())
+		CachedChecks.updating = false
 		return err
 	} else {
 		CachedChecks = cachedChecks{

@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"context"
 	"encoding/json"
+	"errors"
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -47,6 +48,9 @@ func ParseChecksFromDarkmoon() ([]APIResponseCheck, error) {
 	}()
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&newChecks)
+	if len(newChecks) == 0 {
+		return nil, errors.New("nothing parsed")
+	}
 	if err != nil {
 		return []APIResponseCheck{}, err
 	}
