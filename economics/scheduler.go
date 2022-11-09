@@ -157,6 +157,7 @@ func ChecksScheduler(f *firestore.Client, ctx context.Context, ping bool) {
 				fmt.Println("Unable to parse new checks! " + err.Error())
 			}
 			err = nil
+			time.Sleep(5 * time.Minute)
 		} else {
 			if ping {
 				return
