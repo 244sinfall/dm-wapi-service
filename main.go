@@ -21,7 +21,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE, GET, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, DELETE, GET, PUT, PATCH")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -73,7 +73,7 @@ func main() {
 	router.POST("/claimed_items/create", func(c *gin.Context) {
 		claimed_items.AddClaimedItem(c, auth, firestore, ctx)
 	})
-	err = router.RunTLS("dm.rolevik.site:8443", "cert.pem", "privkey.pem")
+	err = router.RunTLS("185.193.143.35:8443", "cert.pem", "privkey.pem")
 	//err = router.Run("127.0.0.1:8000")
 	if err != nil {
 		fmt.Println(err)
