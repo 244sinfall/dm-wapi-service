@@ -191,6 +191,7 @@ func (c *ClaimedItemsResponse) update(id string, permission int64, toUpdate Clai
 			v.Owner = toUpdate.Owner
 			v.OwnerProfile = toUpdate.OwnerProfile
 			v.OwnerProofLink = toUpdate.OwnerProofLink
+			v.AdditionalInfo = toUpdate.AdditionalInfo
 			if !reviewerChange {
 				if !strings.Contains(v.Reviewer, editorName) {
 					y, m, d := time.Now().Date()
