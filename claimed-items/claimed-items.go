@@ -167,7 +167,7 @@ func (c *ClaimedItemsResponse) approve(id string, approveUser string, f *firesto
 	return errors.New("id not found in the database")
 }
 
-func (c *ClaimedItemsResponse) update(id string, toUpdate ClaimedItemUpdatedFields, editorName string, f *firestore.Client, ctx context.Context) error {
+func (c *ClaimedItemsResponse) update(id string, permission int64, toUpdate ClaimedItem, editorName string, f *firestore.Client, ctx context.Context) error {
 	docRef := f.Doc("claimedItems/" + id)
 	doc, err := docRef.Get(ctx)
 	if err != nil {
@@ -177,14 +177,27 @@ func (c *ClaimedItemsResponse) update(id string, toUpdate ClaimedItemUpdatedFiel
 	selectedSlice := ClaimedItems.findNeededSlice(quality)
 	for i, v := range selectedSlice {
 		if v.Id == id {
+			var reviewerChange bool
+			if v.Name != toUpdate.Name || v.Link != toUpdate.Link || v.Reviewer != toUpdate.Reviewer {
+				if permission >= adminPermission {
+					if v.Reviewer != toUpdate.Reviewer {
+						reviewerChange = true
+					}
+					v.Name = toUpdate.Name
+					v.Link = toUpdate.Link
+					v.Reviewer = toUpdate.Reviewer
+				}
+			}
 			v.Owner = toUpdate.Owner
 			v.OwnerProfile = toUpdate.OwnerProfile
 			v.OwnerProofLink = toUpdate.OwnerProofLink
-			rx, _ := regexp.Compile("[0-9]+")
-			if !strings.Contains(v.Reviewer, editorName) {
-				y, m, d := time.Now().Date()
-				v.Reviewer += fmt.Sprintf("\nИзменил: %v (%v.%v.%v)", editorName, d, int(m), y)
+			if !reviewerChange {
+				if !strings.Contains(v.Reviewer, editorName) {
+					y, m, d := time.Now().Date()
+					v.Reviewer += fmt.Sprintf("\nИзменил: %v (%v.%v.%v)", editorName, d, int(m), y)
+				}
 			}
+			rx, _ := regexp.Compile("[0-9]+")
 			v.OwnerProofName = "№ " + rx.FindString(toUpdate.OwnerProofLink)
 			selectedSlice[i] = v
 			_, err := docRef.Set(ctx, v)
@@ -209,12 +222,6 @@ type ClaimedItem struct {
 	AddedAt        time.Time `json:"addedAt"`
 	AcceptedAt     time.Time `json:"acceptedAt"`
 	AdditionalInfo string    `json:"additionalInfo"`
-}
-
-type ClaimedItemUpdatedFields struct {
-	Owner          string `json:"owner"`
-	OwnerProfile   string `json:"ownerProfile"`
-	OwnerProofLink string `json:"ownerProofLink"`
 }
 
 var ClaimedItems ClaimedItemsResponse
@@ -332,7 +339,7 @@ func UpdateClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 		return
 	}
 	user, _ := a.GetUser(ctx, token.UID)
-	claimedItemMock := new(ClaimedItemUpdatedFields)
+	claimedItemMock := new(ClaimedItem)
 	decoder := json.NewDecoder(c.Request.Body)
 	err = decoder.Decode(claimedItemMock)
 	if err != nil {
@@ -340,7 +347,7 @@ func UpdateClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 		return
 	}
 	id := c.Param("id")
-	err = ClaimedItems.update(id, *claimedItemMock, user.DisplayName, f, ctx)
+	err = ClaimedItems.update(id, permission, *claimedItemMock, user.DisplayName, f, ctx)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

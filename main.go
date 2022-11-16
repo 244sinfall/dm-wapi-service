@@ -64,10 +64,10 @@ func main() {
 	router.DELETE("/claimed_items/delete/:id", func(c *gin.Context) {
 		claimed_items.DeleteClaimedItem(c, auth, firestore, ctx)
 	})
-	router.POST("/claimed_items/update/:id", func(c *gin.Context) {
+	router.PUT("/claimed_items/update/:id", func(c *gin.Context) {
 		claimed_items.UpdateClaimedItem(c, auth, firestore, ctx)
 	})
-	router.POST("/claimed_items/approve/:id", func(c *gin.Context) {
+	router.PATCH("/claimed_items/approve/:id", func(c *gin.Context) {
 		claimed_items.ApproveClaimedItem(c, auth, firestore, ctx)
 	})
 	router.POST("/claimed_items/create", func(c *gin.Context) {
