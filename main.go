@@ -7,6 +7,7 @@ import (
 	claimed_items "darkmoonWebApi/claimed-items"
 	"darkmoonWebApi/economics"
 	"darkmoonWebApi/events"
+	"darkmoonWebApi/gob"
 	"darkmoonWebApi/other"
 	firebase "firebase.google.com/go"
 	"fmt"
@@ -59,6 +60,9 @@ func main() {
 	// *Economics* Get Checks
 	router.GET("/economics/get_checks", func(c *gin.Context) {
 		economics.ReceiveChecks(c, auth, firestore, ctx)
+	})
+	router.GET("/gobs", func(c *gin.Context) {
+		gob.ReceiveGobs(c, auth, firestore, ctx)
 	})
 	router.GET("/claimed_items/get_items", claimed_items.ReceiveClaimedItems)
 	router.DELETE("/claimed_items/delete/:id", func(c *gin.Context) {
