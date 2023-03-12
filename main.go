@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		log.Printf("error initializing firebase %v\n", err)
 	}
-	go economics.ChecksScheduler(firestore, ctx, false)
+	go economics.ChecksScheduler(false)
 	claimed_items.GetClaimedItemsFromDatabase(firestore, ctx)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()

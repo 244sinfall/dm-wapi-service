@@ -153,7 +153,7 @@ func ReceiveChecks(c *gin.Context, a *auth.Client, f *firestore.Client, ctx cont
 		return
 	}
 	if len(CachedChecks.checks) == 0 {
-		ChecksScheduler(f, ctx, true)
+		ChecksScheduler(true)
 	}
 	if force != "" {
 		token, _ := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
@@ -167,7 +167,7 @@ func ReceiveChecks(c *gin.Context, a *auth.Client, f *firestore.Client, ctx cont
 			c.JSON(400, gin.H{"error": "Force update is available if cached checks are older than 5 minutes", "updatedAt": CachedChecks.updatedAt})
 			return
 		} else {
-			err := ParseAndDeployNewChecks(f, ctx)
+			err := ParseAndDeployNewChecks()
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
