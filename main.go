@@ -77,7 +77,7 @@ func main() {
 	router.POST("/claimed_items/create", func(c *gin.Context) {
 		claimed_items.AddClaimedItem(c, auth, firestore, ctx)
 	})
-	err = router.RunTLS("185.193.143.35:8443", "cert.pem", "privkey.pem")
+	err = router.RunTLS(os.Getenv("DM_API_HOST"), os.Getenv("DM_API_CERTFILE"), os.Getenv("DM_API_CERTPRIVKEY"))
 	//err = router.Run("127.0.0.1:8000")
 	if err != nil {
 		fmt.Println(err)

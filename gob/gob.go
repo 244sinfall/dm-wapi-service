@@ -22,7 +22,7 @@ var gameObjects = make([]GameObject, 0, 120000)
 const gmPermission = 1
 
 func init() {
-	f, err := os.Open(os.Getenv("/gobs.csv"))
+	f, err := os.Open(os.Getenv("DM_API_GOBS_FILE_PATH"))
 	if err != nil {
 		log.Fatal(err)
 	}
