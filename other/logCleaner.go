@@ -63,6 +63,7 @@ var ignoreRules = []string{
 	"Description: ",
 	"Type: ",
 	"Name: ",
+	"Size: ",
 	"Looks up an gameobject by",
 	"==== Команда в игре ====",
 	"========================",
