@@ -27,13 +27,13 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    - name: Killing process on the server
-      uses: garygrossgarten/github-action-ssh@release
-      with:
-        command: ${{ secrets.KILL }}
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        privateKey: ${{ secrets.SSH}}
+#     - name: Killing process on the server
+#       uses: garygrossgarten/github-action-ssh@release
+#       with:
+#         command: ${{ secrets.KILL }}
+#         host: ${{ secrets.HOST }}
+#         username: ${{ secrets.USERNAME }}
+#         privateKey: ${{ secrets.SSH}}
 
     - name: Deploy to the server
       uses: easingthemes/ssh-deploy@v3.0.1
@@ -47,7 +47,7 @@ jobs:
     - name: Launching process on the server
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: ${{ secrets.EXECUTION }}
+        command: cd /home/user/dmapi && docker-compose down && docker-compose build backend && docker-compose up -d
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         privateKey: ${{ secrets.SSH}}
