@@ -86,7 +86,7 @@ func (c *ClaimedItemsResponse) addToNeededSlice(item ClaimedItem) {
 	case "Прочие":
 		ClaimedItems.other = append(ClaimedItems.other, item)
 	default:
-		ClaimedItems.legendary = append(ClaimedItems.other, item)
+		ClaimedItems.other = append(ClaimedItems.other, item)
 	}
 }
 
