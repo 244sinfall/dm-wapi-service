@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"gopkg.in/mail.v2"
 	"os"
-	"time"
 )
 
 const adminPermission = 4
@@ -40,7 +39,7 @@ func ResetUserPassword(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 	m.SetHeader("From", from)
 	m.SetHeader("To", body.Email)
 	m.SetHeader("Subject", "Сброс пароля для Darkmoon WAPI")
-	m.SetHeader("Message-ID", fmt.Sprintf("%d.%s", time.Now().Unix(), uuid.New().String()))
+	m.SetHeader("Message-ID", fmt.Sprintf("%s@%s", uuid.New().String(), "244sinfall.ru"))
 	m.SetBody("text/plain", "Для сброса пароля "+name+" перейдите по ссылке:\n"+link)
 	password := os.Getenv("DM_API_EMAIL_PASSWORD")
 	host := "smtp.beget.com"
