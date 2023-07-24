@@ -16,38 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.18
-
-    - name: Build
-      run: go build -v -o ./bin/dmWebApiAutomated
-
-    - name: Test
-      run: go test -v ./...
-
-#     - name: Killing process on the server
-#       uses: garygrossgarten/github-action-ssh@release
-#       with:
-#         command: ${{ secrets.KILL }}
-#         host: ${{ secrets.HOST }}
-#         username: ${{ secrets.USERNAME }}
-#         privateKey: ${{ secrets.SSH}}
-
-    - name: Deploy to the server
-      uses: easingthemes/ssh-deploy@v3.0.1
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
-        SOURCE: "bin/"
-        REMOTE_HOST: ${{ secrets.HOST }}
-        REMOTE_USER: ${{ secrets.USERNAME }}
-        TARGET: ${{ secrets.TARGET }}
-
-    - name: Launching process on the server
+    - name: Deploy
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: cd /home/user/dmapi && docker-compose down && docker-compose build backend && docker-compose up -d
+        command: cd {{ secrets.TARGET }}/backend && git pull origin && cd {{ secrets.TARGET }} && docker-compose down && docker-compose build backend && docker-compose up -d
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         privateKey: ${{ secrets.SSH}}
