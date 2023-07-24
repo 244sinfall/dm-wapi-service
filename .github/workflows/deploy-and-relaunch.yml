@@ -19,7 +19,7 @@ jobs:
     - name: Deploy
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: cd ${{ format('{0}/backend', secrets.TARGET) }} && git pull origin && cd {{ secrets.TARGET }} && docker-compose down && docker-compose build backend && docker-compose up -d
+        command: cd "${{ format('{0}/backend', secrets.TARGET) }}" && git pull origin && cd "{{ secrets.TARGET }}" && docker-compose down && docker-compose build backend && docker-compose up -d
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         privateKey: ${{ secrets.SSH}}
