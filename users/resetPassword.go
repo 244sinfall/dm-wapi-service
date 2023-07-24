@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	"net/smtp"
+	"gopkg.in/mail.v2"
 	"os"
 )
 
@@ -33,15 +33,16 @@ func ResetUserPassword(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 	err = decoder.Decode(body)
 	link, err := a.PasswordResetLink(ctx, body.Email)
 	from := "dm@244sinfall.ru"
+	m := mail.NewMessage()
+	m.SetHeader("From", from)
+	m.SetHeader("To", body.Email)
+	m.SetHeader("Subject", "Сброс пароля для Darkmoon WAPI")
+	m.SetBody("text/plain", "Для сброса пароля "+name+" перейдите по ссылке:\n"+link)
 	password := os.Getenv("DM_API_EMAIL_PASSWORD")
-	to := []string{body.Email}
 	host := "smtp.beget.com"
-	port := "25"
-	messageSubject := "Сброс пароля для Darkmoon WAPI\n"
-	messageBody := "Для сброса пароля " + name + " перейдите по ссылке:\n" + link
-	message := []byte(messageSubject + messageBody)
-	emailAuth := smtp.PlainAuth("", from, password, host)
-	err = smtp.SendMail(host+":"+port, emailAuth, from, to, message)
+	port := 25
+	d := mail.NewDialer(host, port, from, password)
+	err = d.DialAndSend(m)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
