@@ -120,6 +120,8 @@ var ignoreRules = []string{
 	"RBAC data reloaded",
 	"Incorrect syntax",
 	"Modify the hp of the selected player",
+	"получает права модератора",
+	"following you.",
 }
 
 func createCleanedLog(inputFile multipart.File) (*os.File, error) {
