@@ -122,6 +122,7 @@ var ignoreRules = []string{
 	"Modify the hp of the selected player",
 	"получает права модератора",
 	"following you.",
+	"nQ (oZ):",
 }
 
 func createCleanedLog(inputFile multipart.File) (*os.File, error) {
