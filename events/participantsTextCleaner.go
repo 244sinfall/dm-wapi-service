@@ -74,34 +74,34 @@ func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
 		r.EditedLines = "Обработка соответствия строк формату:\n" + r.EditedLines + "\n"
 	}
 	r.Count = count
-	if count < 5 {
-		var newCleanedText string
-		var newEditedLines string
-		scanner = bufio.NewScanner(strings.NewReader(r.CleanedText))
-		for scanner.Scan() {
-			participant := scanner.Text()
-			_, suffix := CheckForLegitSuffixes(participant)
-			if suffix == " M" || suffix == " MW" || suffix == " WM" {
-				newEditedLines += participant + " (недостаточно участников)\n"
-				continue
-			}
-			if suffix == " DW" || suffix == " WD" {
-				newCleanedText += strings.TrimSuffix(participant, suffix) + " D\n"
-				newEditedLines += participant + " (недостаточно участников для бонуса)\n"
-				continue
-			}
-			if suffix == " W" {
-				newCleanedText += strings.TrimSuffix(participant, suffix) + "\n"
-				newEditedLines += participant + " (недостаточно участников для бонуса)\n"
-				continue
-			}
-			newCleanedText += participant + "\n"
-		}
-		r.CleanedText = newCleanedText
-		if newEditedLines != "" {
-			r.EditedLines += "Обработка соблюдения условий:\n" + newEditedLines
-		}
-	}
+	//if count < 5 {
+	//	var newCleanedText string
+	//	var newEditedLines string
+	//	scanner = bufio.NewScanner(strings.NewReader(r.CleanedText))
+	//	for scanner.Scan() {
+	//		participant := scanner.Text()
+	//		_, suffix := CheckForLegitSuffixes(participant)
+	//		if suffix == " M" || suffix == " MW" || suffix == " WM" {
+	//			newEditedLines += participant + " (недостаточно участников)\n"
+	//			continue
+	//		}
+	//		if suffix == " DW" || suffix == " WD" {
+	//			newCleanedText += strings.TrimSuffix(participant, suffix) + " D\n"
+	//			newEditedLines += participant + " (недостаточно участников для бонуса)\n"
+	//			continue
+	//		}
+	//		if suffix == " W" {
+	//			newCleanedText += strings.TrimSuffix(participant, suffix) + "\n"
+	//			newEditedLines += participant + " (недостаточно участников для бонуса)\n"
+	//			continue
+	//		}
+	//		newCleanedText += participant + "\n"
+	//	}
+	//	r.CleanedText = newCleanedText
+	//	if newEditedLines != "" {
+	//		r.EditedLines += "Обработка соблюдения условий:\n" + newEditedLines
+	//	}
+	//}
 	return r
 }
 
