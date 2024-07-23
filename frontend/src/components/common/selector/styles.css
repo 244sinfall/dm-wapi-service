@@ -1,0 +1,14 @@
+.selector {
+    height: 30px;
+    background: transparent;
+    color: var(--input-text);
+    border-color: var(--accent-background);
+    outline-color: var(--accent-background);
+    transition: none;
+}
+
+.selector:focus {
+    background: var(--focus);
+    outline-color: var(--accent-background);
+    border-color: var(--accent-background);
+}
