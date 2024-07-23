@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	controllers  "darkmoon-wapi-service/controllers"
+	controllers "darkmoon-wapi-service/controllers"
 	services "darkmoon-wapi-service/services"
 	"fmt"
 	"log"
@@ -51,11 +51,11 @@ func main() {
 		controllers.ReviewGenerate(c)
 	})
 	// *Events* Clean Text
-	router.POST("/events/clean_participants_text", func(c *gin.Context){
+	router.POST("/events/clean_participants_text", func(c *gin.Context) {
 		controllers.CleanParticipantsText(c)
 	})
 	// *Events* Create Lottery
-	router.POST("/events/create_lottery", func(c *gin.Context){
+	router.POST("/events/create_lottery", func(c *gin.Context) {
 		controllers.CreateLottery(c)
 	})
 	// *Arbiters* Base
@@ -63,7 +63,7 @@ func main() {
 		controllers.ArbiterCalculation(c)
 	})
 	// *Log Cleaner*
-	router.POST("/clean_log", func(c *gin.Context){
+	router.POST("/clean_log", func(c *gin.Context) {
 		controllers.LogClean(c)
 	})
 	// *Economics* Get Checks
@@ -73,7 +73,7 @@ func main() {
 	router.GET("/gobs", func(c *gin.Context) {
 		controllers.ReceiveGobs(c, auth, firestore, ctx)
 	})
-	router.GET("/claimed_items/get_items", func(c *gin.Context){
+	router.GET("/claimed_items/get_items", func(c *gin.Context) {
 		controllers.ReceiveClaimedItems(c)
 	})
 	router.DELETE("/claimed_items/delete/:id", func(c *gin.Context) {
@@ -91,7 +91,7 @@ func main() {
 	router.POST("/users/reset", func(c *gin.Context) {
 		controllers.ResetUserPassword(c, auth, firestore, ctx)
 	})
-	err = router.Run(os.Getenv("BACKEND_HOST") + ":" + os.Getenv("BACKEND_PORT"))
+	err = router.Run("0.0.0.0:80")
 	if err != nil {
 		fmt.Println(err)
 	}

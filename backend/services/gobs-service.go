@@ -16,7 +16,7 @@ type GameObject struct {
 var gameObjects = make([]GameObject, 0, 120000)
 
 func init() {
-	f, err := os.Open(os.Getenv("GOBS_FILE_PATH"))
+	f, err := os.Open(os.Getenv("DM_API_GOBS_FILE_PATH"))
 	if err != nil {
 		log.Fatal(err)
 	}
