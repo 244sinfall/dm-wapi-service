@@ -1,13 +1,12 @@
-package events
+package services
 
 import (
 	"bufio"
-	"github.com/gin-gonic/gin"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-	"net/http"
 	regexp2 "regexp"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type ParticipantsRequest struct {
@@ -39,7 +38,7 @@ func CheckForLegitSuffixes(line string) (bool, string) {
 	return false, ""
 }
 
-func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
+func (t ParticipantsRequest) CleanRawText() ParticipantsResponse {
 	var r ParticipantsResponse
 	var count int
 	scanner := bufio.NewScanner(strings.NewReader(t.RawText))
@@ -74,44 +73,5 @@ func cleanRawText(t ParticipantsRequest) ParticipantsResponse {
 		r.EditedLines = "Обработка соответствия строк формату:\n" + r.EditedLines + "\n"
 	}
 	r.Count = count
-	//if count < 5 {
-	//	var newCleanedText string
-	//	var newEditedLines string
-	//	scanner = bufio.NewScanner(strings.NewReader(r.CleanedText))
-	//	for scanner.Scan() {
-	//		participant := scanner.Text()
-	//		_, suffix := CheckForLegitSuffixes(participant)
-	//		if suffix == " M" || suffix == " MW" || suffix == " WM" {
-	//			newEditedLines += participant + " (недостаточно участников)\n"
-	//			continue
-	//		}
-	//		if suffix == " DW" || suffix == " WD" {
-	//			newCleanedText += strings.TrimSuffix(participant, suffix) + " D\n"
-	//			newEditedLines += participant + " (недостаточно участников для бонуса)\n"
-	//			continue
-	//		}
-	//		if suffix == " W" {
-	//			newCleanedText += strings.TrimSuffix(participant, suffix) + "\n"
-	//			newEditedLines += participant + " (недостаточно участников для бонуса)\n"
-	//			continue
-	//		}
-	//		newCleanedText += participant + "\n"
-	//	}
-	//	r.CleanedText = newCleanedText
-	//	if newEditedLines != "" {
-	//		r.EditedLines += "Обработка соблюдения условий:\n" + newEditedLines
-	//	}
-	//}
 	return r
-}
-
-func CleanParticipantsText(c *gin.Context) {
-	var raw ParticipantsRequest
-	err := c.BindJSON(&raw)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
-	response := cleanRawText(raw)
-	c.JSON(http.StatusOK, response)
 }

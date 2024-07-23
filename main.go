@@ -2,20 +2,15 @@ package main
 
 import (
 	"context"
-	"darkmoonWebApi/arbiters"
-	"darkmoonWebApi/charsheet"
-	claimed_items "darkmoonWebApi/claimed-items"
-	"darkmoonWebApi/economics"
-	"darkmoonWebApi/events"
-	"darkmoonWebApi/gob"
-	"darkmoonWebApi/other"
-	"darkmoonWebApi/users"
-	firebase "firebase.google.com/go"
+	controllers  "darkmoon-wapi-service/controllers"
+	services "darkmoon-wapi-service/services"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"google.golang.org/api/option"
 	"log"
 	"os"
+
+	firebase "firebase.google.com/go"
+	"github.com/gin-gonic/gin"
+	"google.golang.org/api/option"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -39,50 +34,64 @@ func main() {
 	var ctx = context.Background()
 	var app, err = firebase.NewApp(ctx, nil, opt)
 	firestore, err := app.Firestore(ctx)
+	if err != nil {
+		log.Printf("error initializing firebase %v\n", err)
+	}
 	auth, err := app.Auth(ctx)
 	if err != nil {
 		log.Printf("error initializing firebase %v\n", err)
 	}
-	go economics.ChecksScheduler(false)
-	claimed_items.GetClaimedItemsFromDatabase(firestore, ctx)
+	go services.ChecksScheduler(false)
+	services.GetClaimedItemsFromDatabase(firestore, ctx)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.Use(CORSMiddleware())
 	// *Review Generator*
-	router.POST("/generate_charsheet_review", charsheet.GenerateReview)
+	router.POST("/generate_charsheet_review", func(c *gin.Context) {
+		controllers.ReviewGenerate(c)
+	})
 	// *Events* Clean Text
-	router.POST("/events/clean_participants_text", events.CleanParticipantsText)
+	router.POST("/events/clean_participants_text", func(c *gin.Context){
+		controllers.CleanParticipantsText(c)
+	})
 	// *Events* Create Lottery
-	router.POST("/events/create_lottery", events.CreateLottery)
+	router.POST("/events/create_lottery", func(c *gin.Context){
+		controllers.CreateLottery(c)
+	})
 	// *Arbiters* Base
-	router.POST("/arbiters/rewards_work", arbiters.ArbiterWork)
+	router.POST("/arbiters/rewards_work", func(c *gin.Context) {
+		controllers.ArbiterCalculation(c)
+	})
 	// *Log Cleaner*
-	router.POST("/clean_log", other.CleanLog)
+	router.POST("/clean_log", func(c *gin.Context){
+		controllers.LogClean(c)
+	})
 	// *Economics* Get Checks
 	router.GET("/economics/get_checks", func(c *gin.Context) {
-		economics.ReceiveChecks(c, auth, firestore, ctx)
+		controllers.ReceiveChecks(c, auth, firestore, ctx)
 	})
 	router.GET("/gobs", func(c *gin.Context) {
-		gob.ReceiveGobs(c, auth, firestore, ctx)
+		controllers.ReceiveGobs(c, auth, firestore, ctx)
 	})
-	router.GET("/claimed_items/get_items", claimed_items.ReceiveClaimedItems)
+	router.GET("/claimed_items/get_items", func(c *gin.Context){
+		controllers.ReceiveClaimedItems(c)
+	})
 	router.DELETE("/claimed_items/delete/:id", func(c *gin.Context) {
-		claimed_items.DeleteClaimedItem(c, auth, firestore, ctx)
+		controllers.DeleteClaimedItem(c, auth, firestore, ctx)
 	})
 	router.PUT("/claimed_items/update/:id", func(c *gin.Context) {
-		claimed_items.UpdateClaimedItem(c, auth, firestore, ctx)
+		controllers.UpdateClaimedItem(c, auth, firestore, ctx)
 	})
 	router.PATCH("/claimed_items/approve/:id", func(c *gin.Context) {
-		claimed_items.ApproveClaimedItem(c, auth, firestore, ctx)
+		controllers.ApproveClaimedItem(c, auth, firestore, ctx)
 	})
 	router.POST("/claimed_items/create", func(c *gin.Context) {
-		claimed_items.AddClaimedItem(c, auth, firestore, ctx)
+		controllers.AddClaimedItem(c, auth, firestore, ctx)
 	})
 	router.POST("/users/reset", func(c *gin.Context) {
-		users.ResetUserPassword(c, auth, firestore, ctx)
+		controllers.ResetUserPassword(c, auth, firestore, ctx)
 	})
-	err = router.RunTLS(os.Getenv("DM_API_HOST"), os.Getenv("DM_API_CERTFILE"), os.Getenv("DM_API_CERTPRIVKEY"))
-	//err = router.Run("127.0.0.1:8000")
+	err = router.Run(os.Getenv("BACKEND_HOST") + ":" + os.Getenv("BACKEND_PORT"))
 	if err != nil {
 		fmt.Println(err)
 	}

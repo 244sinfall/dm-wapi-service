@@ -1,10 +1,23 @@
-package charsheet
+package services
 
-import (
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"net/http"
-)
+import "fmt"
+
+type ReviewRate struct {
+	RateName  string `json:"rateName"`
+	RateValue int    `json:"rateValue"`
+}
+
+type Review struct {
+	Rates           []ReviewRate `json:"rates" binding:"required"`
+	TotalRate       int    `json:"totalRate"`
+	CharName        string `json:"charName" binding:"required"`
+	ReviewerProfile string `json:"reviewerProfile" binding:"required"`
+	ReviewerDiscord string `json:"reviewerDiscord" binding:"required"`
+}
+
+type ReviewOutput struct {
+	Review string `json:"review"`
+}
 
 const reviewStartPart string = "<p style=\"text-align: justify;\" rel=\"text-align: justify;\">Здравствуйте!</p>" +
 	"<p style=\"text-align: justify;\">Ваше творчество было оценено, согласно критериям, указанным в пункте правил " +
@@ -214,24 +227,7 @@ func getReviewPart(rateName string, rateValue int) string {
 	}
 }
 
-type Rate struct {
-	RateName  string `json:"rateName"`
-	RateValue int    `json:"rateValue"`
-}
-
-type Review struct {
-	Rates           []Rate `json:"rates" binding:"required"`
-	TotalRate       int    `json:"totalRate"`
-	CharName        string `json:"charName" binding:"required"`
-	ReviewerProfile string `json:"reviewerProfile" binding:"required"`
-	ReviewerDiscord string `json:"reviewerDiscord" binding:"required"`
-}
-
-type ReviewOutput struct {
-	Review string `json:"review"`
-}
-
-func (review Review) getReviewResponse() ReviewOutput {
+func (review Review) GetReviewResponse() ReviewOutput {
 	var outputObject ReviewOutput
 	output := reviewStartPart
 	var rejected bool
@@ -251,18 +247,4 @@ func (review Review) getReviewResponse() ReviewOutput {
 		" ответов на них.</p><p style=\"text-align: justify;\">С уважением,</p>", review.ReviewerProfile, review.ReviewerDiscord)
 	outputObject.Review = output
 	return outputObject
-}
-
-func GenerateReview(c *gin.Context) {
-	var reviewObject Review
-
-	if err := c.BindJSON(&reviewObject); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if len(reviewObject.Rates) == 0 || reviewObject.CharName == "" ||
-		reviewObject.ReviewerDiscord == "" || reviewObject.ReviewerProfile == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not all required fields provided"})
-	}
-	c.JSON(http.StatusOK, reviewObject.getReviewResponse())
 }

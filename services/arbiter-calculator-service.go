@@ -1,21 +1,18 @@
-package arbiters
+package services
 
 import (
 	"bufio"
-	"darkmoonWebApi/events"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"math"
-	"net/http"
 	"strings"
 )
 
-type ArbiterWorkMode string
+type ArbiterCalculationMode string
 
 const (
-	giveXP   ArbiterWorkMode = "givexp"
-	takeXP   ArbiterWorkMode = "takexp"
-	giveGold ArbiterWorkMode = "givegold"
+	giveXP   ArbiterCalculationMode = "givexp"
+	takeXP   ArbiterCalculationMode = "takexp"
+	giveGold ArbiterCalculationMode = "givegold"
 
 	giveXPCommand   string = ".exp game"
 	takeXPCommand   string = ".exp oth"
@@ -31,27 +28,27 @@ const (
 	crafterAndWriterModifier float64 = 1
 )
 
-type ArbiterWorkRequest struct {
+type ArbiterCalculationRequest struct {
 	ParticipantsCleanedText string          `json:"participantsCleanedText" binding:"required"`
-	Mode                    ArbiterWorkMode `json:"mode" binding:"required"` // "givexp", "takexp", "givegold"
+	Mode                    ArbiterCalculationMode `json:"mode" binding:"required"` // "givexp", "takexp", "givegold"
 	Rate                    int             `json:"rate" binding:"required"`
 	EventLink               string          `json:"eventLink" binding:"required"`
 }
 
-type ArbiterWorkResponse struct {
+type ArbiterCalculationResponse struct {
 	Commands             string `json:"commands"`
 	ParticipantsModified string `json:"participantsModified"`
 }
 
-func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
-	response := ArbiterWorkResponse{"", ""}
+func (r ArbiterCalculationRequest) GenerateResponse() ArbiterCalculationResponse {
+	response := ArbiterCalculationResponse{"", ""}
 	scanner := bufio.NewScanner(strings.NewReader(r.ParticipantsCleanedText))
 	participantsSlice := make([]string, 0)
 	participantsAmount := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(strings.TrimSpace(line)) > 1 {
-			isLegitSuffix, suffix := events.CheckForLegitSuffixes(line)
+			isLegitSuffix, suffix := CheckForLegitSuffixes(line)
 			if strings.Count(line, " ") == 0 ||
 				(strings.Count(line, " ") == 1 && isLegitSuffix) {
 				participantsSlice = append(participantsSlice, line)
@@ -67,7 +64,7 @@ func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
 		var defaultValueToManipulate float64 = float64(r.Rate)
 		participantName := participant
 		var valueToManipulate float64 = 0
-		isLegitSuffix, suffix := events.CheckForLegitSuffixes(participant)
+		isLegitSuffix, suffix := CheckForLegitSuffixes(participant)
 		if isLegitSuffix {
 			participantName, _, _ = strings.Cut(participant, " ")
 			if suffix == " W" {
@@ -112,21 +109,4 @@ func (r ArbiterWorkRequest) generateResponse() ArbiterWorkResponse {
 		//}
 	}
 	return response
-}
-
-func ArbiterWork(c *gin.Context) {
-	var request ArbiterWorkRequest
-	err := c.BindJSON(&request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	switch request.Mode {
-	case giveXP, giveGold, takeXP:
-		response := request.generateResponse()
-		c.JSON(http.StatusOK, response)
-	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown arbiter work mode"})
-		return
-	}
 }
