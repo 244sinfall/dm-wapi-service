@@ -17,17 +17,23 @@ export const CheckStatusValue: Record<CheckStatus | "Все", string> = {
 
 }
 
+type CheckUser = {
+    id: number,
+    nickname: string,
+    gameId: number,
+}
+
 export type ICheck = {
     id: number,
     date: string,
-    sender: string,
+    senderUser: CheckUser,
     receiver: string,
     subject: string,
     body: string,
     money: number,
-    gmName: string,
+    gmUser: CheckUser,
     status: CheckStatus,
-    items: CheckItem[] | null
+    items: string
 }
 
 

@@ -12,29 +12,43 @@ import (
 	"time"
 )
 
+type CheckUser struct {
+	Id       int    `json:"id"`
+	Nickname string `json:"nickname"`
+	GameId   int    `json:"gameId"`
+}
+
+type CheckResponse struct {
+	Types  []string             `json:"types"`
+	Result []CheckResponseCheck `json:"result"`
+	Count  int                  `json:"count"`
+}
+
 type CheckResponseCheckItem struct {
 	Name  string `json:"name"`
 	Count int    `json:"count"`
 }
 
 type CheckResponseCheck struct {
-	Id       int               `json:"id"`
-	Date     string            `json:"date"`
-	Sender   string            `json:"sender"`   // owner
-	Receiver string            `json:"receiver"` // checktype
-	Subject  string            `json:"subject"`  // name
-	Body     string            `json:"body"`     // description
-	Money    int               `json:"money"`
-	GmName   string            `json:"gmName"`
-	Status   string            `json:"status"`
-	Items    []CheckResponseCheckItem `json:"items"`
+	Id       int       `json:"id"`
+	Date     string    `json:"date"`
+	Sender   CheckUser `json:"senderUser"` // owner
+	Receiver string    `json:"receiver"`   // checktype
+	Subject  string    `json:"subject"`    // name
+	Body     string    `json:"body"`       // description
+	Money    int       `json:"money"`
+	GmUser   CheckUser `json:"gmUser"`
+	Status   string    `json:"status"`
+	Items    string    `json:"items"`
 }
 
 const defaultCheckCount = 13000
 const cacheFrequency = 30 * time.Minute
 
-func parseChecksFromDarkmoon() ([]CheckResponseCheck, error) {
-	newChecks := make([]CheckResponseCheck, 0, defaultCheckCount)
+func parseChecksFromDarkmoon() (*CheckResponse, error) {
+	newChecksResponse := new(CheckResponse)
+
+	newChecksResponse.Result = make([]CheckResponseCheck, 0, defaultCheckCount)
 	response, err := http.Get(os.Getenv("DM_API_CHECKS_ADDRESS"))
 	if err != nil {
 		return nil, err
@@ -43,14 +57,14 @@ func parseChecksFromDarkmoon() ([]CheckResponseCheck, error) {
 		_ = response.Body.Close()
 	}()
 	decoder := json.NewDecoder(response.Body)
-	err = decoder.Decode(&newChecks)
-	if len(newChecks) == 0 {
+	err = decoder.Decode(&newChecksResponse)
+	if len(newChecksResponse.Result) == 0 {
 		return nil, errors.New("nothing parsed")
 	}
 	if err != nil {
-		return []CheckResponseCheck{}, err
+		return nil, err
 	}
-	return newChecks, nil
+	return newChecksResponse, nil
 }
 
 func FilterChecksCategory(c []CheckResponseCheck, category string) []CheckResponseCheck {
@@ -127,8 +141,8 @@ func FilterChecks(c []CheckResponseCheck, phrase string) []CheckResponseCheck {
 	newChecks := make([]CheckResponseCheck, 0, len(c)/10)
 	lowerPhrase := strings.ToLower(phrase)
 	for _, check := range c {
-		if strings.Contains(strconv.Itoa(check.Id), phrase) || findTextMatch(check.GmName, lowerPhrase) ||
-			findTextMatch(check.Subject, lowerPhrase) || findTextMatch(check.Sender, lowerPhrase) ||
+		if strings.Contains(strconv.Itoa(check.Id), phrase) || findTextMatch(check.GmUser.Nickname, lowerPhrase) ||
+			findTextMatch(check.Subject, lowerPhrase) || findTextMatch(check.Sender.Nickname, lowerPhrase) ||
 			findTextMatch(check.Body, lowerPhrase) || findTextMatch(check.Receiver, lowerPhrase) {
 			newChecks = append(newChecks, check)
 		}
@@ -138,9 +152,9 @@ func FilterChecks(c []CheckResponseCheck, phrase string) []CheckResponseCheck {
 
 type CachedChecks struct {
 	Checks    []CheckResponseCheck `json:"checks"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	Types     []string `json:"types"`
-	Updating  bool 
+	UpdatedAt time.Time            `json:"updatedAt"`
+	Types     []string             `json:"types"`
+	Updating  bool
 }
 
 var cachedChecks CachedChecks
@@ -171,9 +185,9 @@ func ParseAndDeployNewChecks() error {
 		return err
 	} else {
 		cachedChecks = CachedChecks{
-			Checks:    parsedChecks,
+			Checks:    parsedChecks.Result,
 			UpdatedAt: time.Now(),
-			Types:     findCheckTypes(parsedChecks),
+			Types:     parsedChecks.Types,
 			Updating:  false,
 		}
 	}
