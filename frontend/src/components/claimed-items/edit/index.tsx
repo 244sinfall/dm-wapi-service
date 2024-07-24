@@ -85,7 +85,7 @@ const ClaimedItemEditor = (props: ClaimedItemEditorProps) => {
                            value={changeable.additionalInfo}/>
             </Field>
             <div className="claimed-item-editor-controls">
-                {props.user.permission >= PERMISSION.Reviewer &&
+                {props.user.permission >= PERMISSION.GM &&
                   <ActionButton title="Изменить"
                                 onClick={() => props.onEdit(changeable)}/>}
                 {props.user.permission >= PERMISSION.Admin &&
