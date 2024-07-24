@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Arimo&display=swap');
+
+:root {
+    --header-margin: 20px;
+    --footer-margin: 20px;
+}
+
+html {
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+/** Themes */
+.darkmoon {
+    --accent-background: #5B3E5D;
+    --accent-color: rgb(255, 255, 255);
+    --accent-hover: rgba(166, 159, 166, 0.5);
+    --content-background: rgba(244, 244, 244, 0.95);
+    --content-color: rgb(0,0,0);
+    --focus: rgb(255, 255, 255);
+    --input-border: rgba(87, 59, 89, 0.31);
+    --input-border-focus: rgb(91, 62, 93);
+    --placeholder: rgba(87, 59, 89, 25%);
+    --button-group-color: rgb(0,0,0);
+    --button-group-border: rgb(91, 62, 93);
+    --button-group-hover-color: rgba(244, 244, 244, 0.95);
+    --button-group-hover-background: rgb(91, 62, 93);
+    --button-group-selected: rgb(65, 46, 68);
+    --button-content: rgb(91, 62, 93);
+    --button-border: rgb(91, 62, 93);
+    --button-content-hover: rgb(255, 255, 255);
+    --button-background-hover: rgb(91, 62, 93);
+    --input-text: rgb(87, 59, 89);
+    --background-darken: 0%;
+}
+
+.light {
+    --accent-background: #D5D5D5;
+    --accent-color: rgb(26, 26, 26);
+    --accent-hover: rgba(166, 159, 166, 0.25);
+    --content-background: rgba(244, 244, 244, 0.95);
+    --content-color: rgb(45, 45, 45);
+    --focus: rgb(255, 255, 255);
+    --input-border: rgba(37, 31, 37, 50%);
+    --input-border-focus: rgb(37, 29, 37);
+    --placeholder: rgba(87, 59, 89, 50%);
+    --button-group-color: rgb(26, 26, 26);
+    --button-group-border: rgba(37, 31, 37, 100%);
+    --button-group-hover-color: rgba(244, 244, 244, 0.95);
+    --button-group-hover-background: rgb(26, 26, 26);
+    --button-group-selected: rgb(14, 14, 14);
+    --button-content: rgb(26, 26, 26);
+    --button-border: rgb(26, 26, 26);
+    --button-content-hover: rgb(255, 255, 255);
+    --button-background-hover: rgb(26, 26, 26);
+    --input-text: rgb(14, 14, 14);
+    --background-darken: 0%;
+}
+
+.dark {
+    --accent-background: #1E1E1E;
+    --accent-color: rgb(213, 203, 203);
+    --accent-hover: rgba(87, 81, 87, 0.25);
+    --content-background: rgba(61, 61, 61, 0.95);
+    --content-color: rgb(180, 162, 162);
+    --focus: rgb(50, 50, 50);
+    --input-border: rgba(37, 31, 37, 50%);
+    --input-border-focus: rgb(26, 21, 26);
+    --placeholder: rgba(115, 112, 115, 0.35);
+    --button-group-color: rgb(176, 164, 164);
+    --button-group-border: rgb(26, 26, 26);
+    --button-group-hover-color: rgba(244, 244, 244, 0.95);
+    --button-group-hover-background: rgb(26, 26, 26);
+    --button-group-selected: rgb(14, 14, 14);
+    --button-content: rgb(162, 153, 153);
+    --button-border: rgb(26, 26, 26);
+    --button-content-hover: rgb(255, 255, 255);
+    --button-background-hover: rgb(26, 26, 26);
+    --input-text: rgb(220, 214, 214);
+    --background-darken: 75%;
+}
+.generated-link {
+    text-decoration: var(--content-color) underline;
+}
+
+.generated-link:hover {
+    text-decoration: var(--content-color) underline;
+}
+
+* hr {
+    border: 1px solid var(--accent-background);
+}
+* {
+    margin: 0;
+    padding: 0;
+    transition: background 250ms ease-in-out, color 100ms linear;
+}
+html, body  {
+    background: linear-gradient(rgba(0, 0, 0, var(--background-darken)), rgba(0, 0, 0, var(--background-darken))), url("/src/assets/bgdarkmoon.png") no-repeat fixed;
+    background-size: cover;
+    overflow-x: clip;
+    width: 100%;
+}
+
+.App {
+    margin-left: 10vw;
+    margin-right: 10vw;
+    font-family: 'Arimo', sans-serif;
+    margin-bottom: var(--footer-margin);
+}
+.App .header__container {
+    margin-bottom: 20px;
+    margin-top: var(--header-margin);
+
+}
+
+@media screen and (max-width: 1095px) {
+    html, body {
+        overflow-x: hidden;
+    }
+    .App {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media screen and (max-width: 750px) {
+    :root {
+        --header-margin: 0px;
+        --footer-margin: 0px;
+    }
+
+}

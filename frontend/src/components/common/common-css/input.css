@@ -1,0 +1,25 @@
+.input {
+    height: 30px;
+    font-size: 18px;
+    transition: 0.5s;
+    color: var(--input-text);
+    border: 2px solid var(--input-border);
+    border-radius: 5pt;
+    padding-left: 5pt;
+    background: transparent;
+}
+
+.input:focus {
+    border: 2px solid var(--input-border-focus);
+    outline: none;
+    background: var(--focus);
+}
+
+.input::placeholder {
+    color: var(--placeholder);
+}
+.input:disabled {
+    background: var(--focus);
+    -webkit-text-fill-color: var(--input-text);
+    -webkit-opacity: 1;
+}
