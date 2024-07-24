@@ -9,7 +9,7 @@ import {LayoutResponsiveGrid} from "../../../components/common/layouts/responsiv
 
 const EventsPage = () => {
     return (
-        <Protector accessLevel={PERMISSION.Reviewer}>
+        <Protector accessLevel={PERMISSION.GM}>
             <LayoutResponsiveGrid gap={10} columns={[{minWidth: 620}, {minWidth: 330}]}>
                 <TextCleaner/>
                 <LotteryCreator/>

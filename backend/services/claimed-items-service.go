@@ -107,24 +107,24 @@ func (c *ClaimedItemsList) Add(i ClaimedItem, f *firestore.Client, ctx context.C
 	return nil
 }
 
-func (c *ClaimedItemsList) Delete(id string, f *firestore.Client, ctx context.Context) error {
+func (c *ClaimedItemsList) Delete(id string, f *firestore.Client, ctx context.Context) (*ClaimedItem, error) {
 	docRef := f.Doc("claimedItems/" + id)
 	data, err := docRef.Get(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	itemToDelete := new(ClaimedItem)
 	err = data.DataTo(itemToDelete)
 	itemToDelete.Id = id
 	if err != nil {
-		return err
+		return nil, err
 	}
 	claimedItems.deleteFromNeededSlice(*itemToDelete)
 	_, err = docRef.Delete(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return itemToDelete, nil
 }
 
 func (c *ClaimedItemsList) Approve(id string, approveUser string, f *firestore.Client, ctx context.Context) error {
@@ -152,16 +152,17 @@ func (c *ClaimedItemsList) Approve(id string, approveUser string, f *firestore.C
 	return errors.New("id not found in the database")
 }
 
-func (c *ClaimedItemsList) Update(id string, admin bool, toUpdate ClaimedItem, editorName string, f *firestore.Client, ctx context.Context) error {
+func (c *ClaimedItemsList) Update(id string, admin bool, toUpdate ClaimedItem, editorName string, f *firestore.Client, ctx context.Context) (newItem *ClaimedItem, oldItem *ClaimedItem, err error) {
 	docRef := f.Doc("claimedItems/" + id)
 	doc, err := docRef.Get(ctx)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	quality := doc.Data()["Quality"].(string)
 	selectedSlice := claimedItems.findNeededSlice(quality)
 	for i, v := range selectedSlice {
 		if v.Id == id {
+			oldItem := v
 			var reviewerChange bool
 			if v.Name != toUpdate.Name || v.Link != toUpdate.Link || v.Reviewer != toUpdate.Reviewer {
 				if admin {
@@ -187,10 +188,10 @@ func (c *ClaimedItemsList) Update(id string, admin bool, toUpdate ClaimedItem, e
 			v.OwnerProofName = "№ " + rx.FindString(toUpdate.OwnerProofLink)
 			selectedSlice[i] = v
 			_, err := docRef.Set(ctx, v)
-			return err
+			return &v, &oldItem, err
 		}
 	}
-	return errors.New("id not found in the database")
+	return nil, nil, errors.New("id not found in the database")
 }
 
 type ClaimedItem struct {
@@ -212,7 +213,7 @@ type ClaimedItem struct {
 
 var claimedItems ClaimedItemsList
 
-func GetClaimedItems() ClaimedItemsList{
+func GetClaimedItems() ClaimedItemsList {
 	return claimedItems
 }
 

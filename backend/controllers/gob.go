@@ -1,19 +1,23 @@
 package controllers
 
 import (
-	"cloud.google.com/go/firestore"
 	"context"
+	"darkmoon-wapi-service/permissions"
+	services "darkmoon-wapi-service/services"
+
+	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	services "darkmoon-wapi-service/services"
 )
 
 
 func ReceiveGobs(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
-	token, _ := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
-	permInfo, _ := f.Doc("permissions/" + token.UID).Get(ctx)
-	permission := permInfo.Data()["permission"].(int64)
-	if permission < gmPermission {
+	user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	if user.Permission < permissions.GmPermission {
 		c.JSON(400, gin.H{"error": "Not enough permissions"})
 		return
 	}

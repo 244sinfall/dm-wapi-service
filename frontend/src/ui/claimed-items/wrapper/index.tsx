@@ -40,7 +40,7 @@ const ClaimedItemTable = (props: ClaimedItemTableProps) => {
     const dispatch = useAppDispatch();
     const renderFunction = useCallback((item: ClaimedItemInterface) => {
         return <ClaimedItemRow key={item.id} item={item} onClick={() => {
-            if(state.user.permission >= PERMISSION.Reviewer) {
+            if(state.user.permission >= PERMISSION.GM) {
                 dispatch(setEditModal(item))
             }
         }}/>
@@ -49,7 +49,7 @@ const ClaimedItemTable = (props: ClaimedItemTableProps) => {
         <ClaimedItemCategory isShowing={isShowing} page={state.page} onPaginate={(page) =>
                                                                     dispatch(setPage({key: props.quality, page}))}
                              onAdd={() => dispatch(setAddModal(props.quality))}
-                             isReviewer={state.user.permission >= PERMISSION.Reviewer}
+                             isReviewer={state.user.permission >= PERMISSION.GM}
                              content={displayingContent}
                              isLoading={state.isLoading}
                              title={ClaimedItemTitles[props.quality]}

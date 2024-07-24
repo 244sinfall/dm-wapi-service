@@ -28,8 +28,8 @@ export default class API extends Service {
         }
         init.headers.push(["Accept", Config.endpoints[endpoint].accept])
         if(payload) init.body = payload
-        const response = await fetch(`${Config.address}${Config.endpoints[endpoint].url}${params}`, init)
-        if(!response.ok) throw new APIResponseKnownError(response)
-        return response
+        return await fetch(`${Config.address}${Config.endpoints[endpoint].url}${params}`, init)
+        // if(!response.ok) throw new APIResponseKnownError(response)
+        // return response
     }
 }

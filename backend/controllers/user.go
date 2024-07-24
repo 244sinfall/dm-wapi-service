@@ -2,32 +2,23 @@ package controllers
 
 import (
 	"context"
+	permissions "darkmoon-wapi-service/permissions"
+	services "darkmoon-wapi-service/services"
 	"encoding/json"
-	"fmt"
-	"os"
+	"errors"
 
 	"cloud.google.com/go/firestore"
 	"firebase.google.com/go/auth"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gopkg.in/mail.v2"
 )
 
 func ResetUserPassword(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
-	token, err := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
+	user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	permInfo, err := f.Doc("permissions/" + token.UID).Get(ctx)
-	permData := permInfo.Data()
-	permission := permData["permission"].(int64)
-	name := permData["name"].(string)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	if permission < adminPermission {
+	if user.Permission < permissions.AdminPermission {
 		c.JSON(400, gin.H{"error": "You dont have permission"})
 		return
 	}
@@ -40,26 +31,44 @@ func ResetUserPassword(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	link, err := a.PasswordResetLink(ctx, body.Email)
+	_, err = a.PasswordResetLink(ctx, body.Email)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	from := "dm@244sinfall.ru"
-	m := mail.NewMessage()
-	m.SetHeader("From", from)
-	m.SetHeader("To", body.Email)
-	m.SetHeader("Subject", "Сброс пароля для Darkmoon WAPI")
-	m.SetHeader("Message-ID", fmt.Sprintf("%s@%s", uuid.New().String(), "244sinfall.ru"))
-	m.SetBody("text/plain", "Для сброса пароля "+name+" перейдите по ссылке:\n"+link)
-	password := os.Getenv("DM_API_EMAIL_PASSWORD")
-	host := "smtp.beget.com"
-	port := 25
-	d := mail.NewDialer(host, port, from, password)
-	err = d.DialAndSend(m)
+	c.Status(200)
+}
+
+type connectBody struct {
+	Code string `json:"code"`
+}
+
+func ConnectToAuthService(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
+	fbaccess := c.Request.Header.Get("Authorization")
+	decoder := json.NewDecoder(c.Request.Body)
+	var bodyJson = new(connectBody)
+	err := decoder.Decode(&bodyJson)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(400, gin.H{"error": "Error decoding body: " + err.Error()})
 		return
 	}
-	c.Status(200)
+	user, err := services.ConnectToDarkmoon(fbaccess, bodyJson.Code, a, f, ctx)
+	if err != nil {
+		c.JSON(503, gin.H{"error": "Error connecting to Darkmoon: " + err.Error()})
+		return
+	}
+	c.JSON(200, user)
+}
+
+func GetMe(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
+	fbaccess := c.Request.Header.Get("Authorization")
+	user, err := services.Authenticate(fbaccess, a, f, ctx)
+	if err != nil {
+		if errors.Is(err, &services.NotConnectedError{}) || errors.Is(err, &services.RevokedError{}) {
+			c.JSON(404, gin.H{"error": err.Error()})
+		}
+		c.JSON(401, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, user)
 }

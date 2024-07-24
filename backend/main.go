@@ -4,6 +4,7 @@ import (
 	"context"
 	controllers "darkmoon-wapi-service/controllers"
 	services "darkmoon-wapi-service/services"
+	rabbitmq_client "darkmoon-wapi-service/rabbitmq_client"
 	"fmt"
 	"log"
 	"os"
@@ -33,6 +34,7 @@ func main() {
 	var opt = option.WithCredentialsFile(os.Getenv("DM_API_FIREBASE_CREDENTIALS_FILE"))
 	var ctx = context.Background()
 	var app, err = firebase.NewApp(ctx, nil, opt)
+	rabbitmq_client.InitRabbitMq()
 	firestore, err := app.Firestore(ctx)
 	if err != nil {
 		log.Printf("error initializing firebase %v\n", err)
@@ -90,6 +92,12 @@ func main() {
 	})
 	router.POST("/users/reset", func(c *gin.Context) {
 		controllers.ResetUserPassword(c, auth, firestore, ctx)
+	})
+	router.POST("v2/users/connect", func(c *gin.Context) {
+		controllers.ConnectToAuthService(c, auth, firestore, ctx)
+	})
+	router.GET("v2/users/me", func(c *gin.Context) {
+		controllers.GetMe(c, auth, firestore, ctx)
 	})
 	err = router.Run("0.0.0.0:80")
 	if err != nil {

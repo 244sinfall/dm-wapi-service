@@ -49,8 +49,8 @@ const AccountManager = () => {
         <>
             {state.user.email ?
                 <WelcomeExistingUser name={state.user.name ?? "Загрузка..."}
-                                     isAdmin={state.user.permission >= PERMISSION.Admin}
-                                     onAdmin={() => nav('/admin')}
+                                     isConnected={state.user.apiUser != null}
+                                     onConnect={() => nav('/connect')}
                                      permissionName={state.isLoading ? "Загрузка..." : PermissionNameByValue[state.user.permission]}
                                      onLogout={()=> dispatch(destroySession())}/>
             :

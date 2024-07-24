@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"darkmoon-wapi-service/permissions"
+	rabbitmqclient "darkmoon-wapi-service/rabbitmq_client"
+	rabbitmqmessages "darkmoon-wapi-service/rabbitmq_messages"
 	services "darkmoon-wapi-service/services"
 
 	"cloud.google.com/go/firestore"
@@ -16,18 +19,12 @@ type ClaimedItem = services.ClaimedItem
 type ClaimedItemsList = services.ClaimedItemsList
 
 func AddClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
-	token, err := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
+	user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	permInfo, err := f.Doc("permissions/" + token.UID).Get(ctx)
-	permission := permInfo.Data()["permission"].(int64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	if permission < reviewerPermission {
+	if user.Permission < permissions.GmPermission {
 		c.JSON(400, gin.H{"error": "You dont have permission"})
 		return
 	}
@@ -45,34 +42,30 @@ func AddClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx con
 		return
 	} else {
 		c.Status(200)
+		baseMessage := rabbitmqmessages.GetAuthenticatedBaseMessage(user, "Claimed-Item", "Added")
+		rabbitmqclient.SendLogMessage(rabbitmqmessages.GetClaimedItemRabbitMQMessage(baseMessage, claimedItem, nil), user.AuthenticatedUser, nil)
 		return
 	}
 }
 
 func ApproveClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
-	token, err := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
+	user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	permInfo, err := f.Doc("permissions/" + token.UID).Get(ctx)
-	permission := permInfo.Data()["permission"].(int64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	if permission < adminPermission {
+	if user.Permission < permissions.AdminPermission {
 		c.JSON(400, gin.H{"error": "You dont have permission"})
 		return
 	}
 	id := c.Param("id")
-	user, err := a.GetUser(ctx, token.UID)
+	fbUser, err := a.GetUser(ctx, user.IntegrationUserId)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "User not found"})
 		return
 	}
 	list := services.GetClaimedItems()
-	err = list.Approve(id, user.DisplayName, f, ctx)
+	err = list.Approve(id, fbUser.DisplayName, f, ctx)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -83,22 +76,16 @@ func ApproveClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx
 }
 
 func UpdateClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
-	token, err := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
+	user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	permInfo, err := f.Doc("permissions/" + token.UID).Get(ctx)
-	permission := permInfo.Data()["permission"].(int64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	if permission < reviewerPermission {
+	if user.Permission < permissions.GmPermission {
 		c.JSON(400, gin.H{"error": "You dont have permission"})
 		return
 	}
-	user, _ := a.GetUser(ctx, token.UID)
+	fbUser, _ := a.GetUser(ctx, user.IntegrationUserId)
 	claimedItemMock := new(ClaimedItem)
 	decoder := json.NewDecoder(c.Request.Body)
 	err = decoder.Decode(claimedItemMock)
@@ -108,39 +95,37 @@ func UpdateClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx 
 	}
 	id := c.Param("id")
 	list := services.GetClaimedItems()
-	err = list.Update(id, permission == adminPermission, *claimedItemMock, user.DisplayName, f, ctx)
+	newItem, oldItem, err := list.Update(id, user.Permission >= permissions.AdminPermission, *claimedItemMock, fbUser.DisplayName, f, ctx)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	} else {
+		baseMessage := rabbitmqmessages.GetAuthenticatedBaseMessage(user, "Claimed-Item", "Updated")
+		rabbitmqclient.SendLogMessage(rabbitmqmessages.GetClaimedItemRabbitMQMessage(baseMessage, newItem, oldItem), user.AuthenticatedUser, nil)
 		c.Status(200)
 		return
 	}
 }
 
 func DeleteClaimedItem(c *gin.Context, a *auth.Client, f *firestore.Client, ctx context.Context) {
-	token, err := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
+	user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	permInfo, err := f.Doc("permissions/" + token.UID).Get(ctx)
-	permission := permInfo.Data()["permission"].(int64)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	if permission < adminPermission {
+	if user.Permission < permissions.AdminPermission {
 		c.JSON(400, gin.H{"error": "You dont have permission"})
 		return
 	}
 	id := c.Param("id")
 	list := services.GetClaimedItems()
-	err = list.Delete(id, f, ctx)
+	item, err := list.Delete(id, f, ctx)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+	baseMessage := rabbitmqmessages.GetAuthenticatedBaseMessage(user, "Claimed-Item", "Deleted")
+	rabbitmqclient.SendLogMessage(rabbitmqmessages.GetClaimedItemRabbitMQMessage(baseMessage, item, nil), user.AuthenticatedUser, nil)
 	c.Status(200)
 }
 

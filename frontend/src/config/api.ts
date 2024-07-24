@@ -21,6 +21,9 @@ const APIConfig = {
             delete: '/claimed_items/delete',
             update: '/claimed_items/update',
             approve: '/claimed_items/approve'
+        },
+        user: {
+            me: '/v2/users/me'
         }
     }
 } as const

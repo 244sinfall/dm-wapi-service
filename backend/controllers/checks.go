@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"darkmoon-wapi-service/permissions"
 	services "darkmoon-wapi-service/services"
 
 	"cloud.google.com/go/firestore"
@@ -30,14 +31,16 @@ func ReceiveChecks(c *gin.Context, a *auth.Client, f *firestore.Client, ctx cont
 		services.ChecksScheduler(true)
 	}
 	if force != "" {
-		token, _ := a.VerifyIDToken(ctx, c.Request.Header.Get("Authorization"))
-		permInfo, _ := f.Doc("permissions/" + token.UID).Get(ctx)
-		permission := permInfo.Data()["permission"].(int64)
-		if permission < gmPermission {
-			c.JSON(400, gin.H{"error": "Not enough permissions"})
+		user, err := services.Authenticate(c.Request.Header.Get("Authorization"), a, f, ctx)
+		if err != nil {
+			c.JSON(403, gin.H{"error": "You don't have permission"})
 			return
 		}
-		if time.Now().Sub(CachedChecks.UpdatedAt) < 5*time.Minute {
+		if user.Permission < permissions.GmPermission {
+			c.JSON(403, gin.H{"error": "Not enough permissions"})
+			return
+		}
+		if time.Since(CachedChecks.UpdatedAt) < 5*time.Minute {
 			c.JSON(400, gin.H{"error": "Force update is available if cached checks are older than 5 minutes", "updatedAt": CachedChecks.UpdatedAt})
 			return
 		} else {

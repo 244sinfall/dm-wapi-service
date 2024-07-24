@@ -7,7 +7,7 @@ import {LayoutResponsiveGrid} from "../../../components/common/layouts/responsiv
 
 const CharsheetPage = () => {
     return (
-        <Protector accessLevel={PERMISSION.Reviewer}>
+        <Protector accessLevel={PERMISSION.GM}>
             <LayoutResponsiveGrid gap={10} columns={[{maxWidth: 350}, {}]}>
                 <CharsheetReviewRateCounter
                     rateMin={0} rateMax={10}/>

@@ -60,9 +60,9 @@ const WelcomeNewUser = (props: WelcomeNewUserProps) => {
                         <ActionButton title={formState === "reg" ? "К авторизации" : "К регистрации"}
                                       onClick={() => setFormState(prev => prev === "reg" ? "auth" : "reg")} />
                     </div>
-                    <Turnstile siteKey={"0x4AAAAAAAD0fdup-VPB9kq_"}
+                    {/* <Turnstile siteKey={"0x4AAAAAAAD0fdup-VPB9kq_"}
                                onError={() => props.onCaptcha(false)}
-                               onSuccess={() => props.onCaptcha(true)}/>
+                               onSuccess={() => props.onCaptcha(true)}/> */}
                 </form>
             </LoadingSpinner>
         </ContentTitle>

@@ -1,6 +1,18 @@
 const APIConfig = {
     address: process.env["REACT_APP_API_ADDRESS"],
     endpoints: {
+        "users.me": {
+            url: "/v2/users/me",
+            method: "GET",
+            auth: true,
+            accept: "application/json"
+        },
+        "users.connect": {
+            url: "/v2/users/connect",
+            method: "POST",
+            auth: true,
+            accept: "application/json"
+        },
         "users.reset": {
             url: "/users/reset",
             method: "POST",

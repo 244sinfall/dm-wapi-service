@@ -6,9 +6,9 @@ import './styles.css'
 type WelcomeExistingUserProps = {
     name: string,
     permissionName: string,
-    isAdmin: boolean
+    isConnected: boolean
     onLogout: (() => Promise<void>) | (() => void)
-    onAdmin?: (() => Promise<void>) | (() => void)
+    onConnect?: (() => Promise<void>) | (() => void)
 }
 
 const WelcomeExistingUser = (props: WelcomeExistingUserProps) => {
@@ -18,7 +18,7 @@ const WelcomeExistingUser = (props: WelcomeExistingUserProps) => {
             <p>Уровень доступа: {props.permissionName}</p>
             <span className="welcome-message__controls">
                 <ActionButton title="Выйти" onClick={props.onLogout}/>
-                {props.isAdmin && <ActionButton title="Админка" onClick={props.onAdmin}/>}
+                {!props.isConnected && <ActionButton title="Привязать DM" onClick={props.onConnect}/>}
             </span>
         </ContentTitle>
     );
