@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/firestore v1.15.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/gin-gonic/gin v1.8.1
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	golang.org/x/text v0.16.0
 	google.golang.org/api v0.187.0
 )

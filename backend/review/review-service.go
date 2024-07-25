@@ -1,23 +1,6 @@
-package services
+package review
 
 import "fmt"
-
-type ReviewRate struct {
-	RateName  string `json:"rateName"`
-	RateValue int    `json:"rateValue"`
-}
-
-type Review struct {
-	Rates           []ReviewRate `json:"rates" binding:"required"`
-	TotalRate       int    `json:"totalRate"`
-	CharName        string `json:"charName" binding:"required"`
-	ReviewerProfile string `json:"reviewerProfile" binding:"required"`
-	ReviewerDiscord string `json:"reviewerDiscord" binding:"required"`
-}
-
-type ReviewOutput struct {
-	Review string `json:"review"`
-}
 
 const reviewStartPart string = "<p style=\"text-align: justify;\" rel=\"text-align: justify;\">Здравствуйте!</p>" +
 	"<p style=\"text-align: justify;\">Ваше творчество было оценено, согласно критериям, указанным в пункте правил " +
@@ -227,8 +210,8 @@ func getReviewPart(rateName string, rateValue int) string {
 	}
 }
 
-func (review Review) GetReviewResponse() ReviewOutput {
-	var outputObject ReviewOutput
+func (review review) getReviewResponse() reviewOutput {
+	var outputObject reviewOutput
 	output := reviewStartPart
 	var rejected bool
 	for _, rate := range review.Rates {

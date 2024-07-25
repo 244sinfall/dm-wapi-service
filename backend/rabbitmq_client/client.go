@@ -9,15 +9,15 @@ import (
 	"os"
 	"time"
 
-	messages "darkmoon-wapi-service/rabbitmq_messages"
-	services "darkmoon-wapi-service/services"
+	"darkmoon-wapi-service/auth"
+	rabbitmqmessages "darkmoon-wapi-service/rabbitmq_messages"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var rabbitMqConnection *amqp.Connection = nil
 
-func InitRabbitMq() {
+func init() {
 	conn, err := amqp.DialTLS(os.Getenv("DM_API_RABBITMQ_STRING"), &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
 		log.Fatalf("Cannot connect to rabbitmq: %v\n", err)
@@ -25,7 +25,7 @@ func InitRabbitMq() {
 	rabbitMqConnection = conn
 }
 
-func SendLogMessage(message messages.IRabbitMQMessage, user *services.AuthenticatedUser, target *services.AuthenticatedUser) {
+func SendLogMessage(message rabbitmqmessages.IRabbitMQMessage, user *auth.WapiAuthenticatedUser, target *auth.WapiAuthenticatedUser) {
 	ch, err := rabbitMqConnection.Channel()
 	if err != nil {
 		fmt.Printf("Cannot create a channel: %v\n", err)

@@ -1,54 +1,22 @@
-package services
+package arbiter
 
 import (
 	"bufio"
+	"darkmoon-wapi-service/common"
 	"fmt"
 	"math"
 	"strings"
 )
 
-type ArbiterCalculationMode string
-
-const (
-	giveXP   ArbiterCalculationMode = "givexp"
-	takeXP   ArbiterCalculationMode = "takexp"
-	giveGold ArbiterCalculationMode = "givegold"
-
-	giveXPCommand   string = ".exp game"
-	takeXPCommand   string = ".exp oth"
-	giveGoldCommand string = ".send mo"
-
-	xpToRateModifier   float64 = 1000
-	goldToRateModifier float64 = 6000
-
-	writerModifier           float64 = 1.5
-	masterModifier           float64 = 1
-	masterAndWriterModifier  float64 = 1.5
-	crafterModifier          float64 = 0.5
-	crafterAndWriterModifier float64 = 1
-)
-
-type ArbiterCalculationRequest struct {
-	ParticipantsCleanedText string          `json:"participantsCleanedText" binding:"required"`
-	Mode                    ArbiterCalculationMode `json:"mode" binding:"required"` // "givexp", "takexp", "givegold"
-	Rate                    int             `json:"rate" binding:"required"`
-	EventLink               string          `json:"eventLink" binding:"required"`
-}
-
-type ArbiterCalculationResponse struct {
-	Commands             string `json:"commands"`
-	ParticipantsModified string `json:"participantsModified"`
-}
-
-func (r ArbiterCalculationRequest) GenerateResponse() ArbiterCalculationResponse {
-	response := ArbiterCalculationResponse{"", ""}
+func (r arbiterCommandsRequest) generateResponse() arbiterCommandsResponse {
+	response := arbiterCommandsResponse{"", ""}
 	scanner := bufio.NewScanner(strings.NewReader(r.ParticipantsCleanedText))
 	participantsSlice := make([]string, 0)
 	participantsAmount := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(strings.TrimSpace(line)) > 1 {
-			isLegitSuffix, suffix := CheckForLegitSuffixes(line)
+			isLegitSuffix, suffix := common.GetSuffixIfLegit(line)
 			if strings.Count(line, " ") == 0 ||
 				(strings.Count(line, " ") == 1 && isLegitSuffix) {
 				participantsSlice = append(participantsSlice, line)
@@ -64,7 +32,7 @@ func (r ArbiterCalculationRequest) GenerateResponse() ArbiterCalculationResponse
 		var defaultValueToManipulate float64 = float64(r.Rate)
 		participantName := participant
 		var valueToManipulate float64 = 0
-		isLegitSuffix, suffix := CheckForLegitSuffixes(participant)
+		isLegitSuffix, suffix := common.GetSuffixIfLegit(participant)
 		if isLegitSuffix {
 			participantName, _, _ = strings.Cut(participant, " ")
 			if suffix == " W" {
