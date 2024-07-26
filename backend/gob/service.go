@@ -1,4 +1,4 @@
-package services
+package gob
 
 import (
 	"encoding/csv"
@@ -6,12 +6,6 @@ import (
 	"os"
 	"strconv"
 )
-
-type GameObject struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-	Type int    `json:"type"`
-}
 
 var gameObjects = make([]GameObject, 0, 120000)
 
@@ -40,6 +34,6 @@ func init() {
 	}
 }
 
-func GetGobs() []GameObject {
+func getGobs() []GameObject {
 	return gameObjects
 }

@@ -1,7 +1,7 @@
 package rabbitmqmessages
 
 import (
-	services "darkmoon-wapi-service/services"
+	"darkmoon-wapi-service/auth"
 	"fmt"
 	"strings"
 )
@@ -39,10 +39,10 @@ func (m *AuthenticatedRabbitMQMessage) GetTopic() string {
 	return fmt.Sprintf("logs.web-authorized.wapi-service.%s.%s", strings.ToLower(m.Entity), strings.ToLower(m.Operation))
 }
 
-func GetAuthenticatedBaseMessage(au *services.IntegrationAuthenticatedUser, entity string, operation string) *AuthenticatedRabbitMQMessage {
+func GetAuthenticatedBaseMessage(au *auth.WapiAuthenticatedUser, entity string, operation string) *AuthenticatedRabbitMQMessage {
 	var new = new(AuthenticatedRabbitMQMessage)
 	new.RabbitMQMessage = GetBaseMessage(entity, operation)
-	new.Id = au.User.Id
+	new.Id = au.UserId
 	new.Integration = "Wapi"
 	new.IntegrationUserId = au.IntegrationUserId
 	return new

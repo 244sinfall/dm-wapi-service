@@ -1,19 +1,18 @@
-package controllers
+package participants
 
 import (
-	services "darkmoon-wapi-service/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func CleanParticipantsText(c *gin.Context) {
-	var raw services.ParticipantsRequest
+	var raw participantsRequest
 	err := c.BindJSON(&raw)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
-	response := raw.CleanRawText()
+	response := raw.cleanRawText()
 	c.JSON(http.StatusOK, response)
 }

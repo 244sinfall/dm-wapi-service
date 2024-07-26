@@ -1,7 +1,6 @@
-package controllers
+package logcleaner
 
 import (
-	services "darkmoon-wapi-service/services"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,9 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const maxFileSize int64 = 1e+8
-
-func LogClean(c *gin.Context) {
+func CleanLog(c *gin.Context) {
 	file, err := c.FormFile("input")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -31,7 +28,7 @@ func LogClean(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cleanedFile, err := services.CleanLog(textFile)
+	cleanedFile, err := processLog(textFile)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

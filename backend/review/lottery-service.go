@@ -1,48 +1,11 @@
-package services
+package review
 
 import (
 	"math"
 	"math/rand/v2"
 )
 
-type itemPrice int
-
-const (
-	epicItem       itemPrice = 72
-	rareItem       itemPrice = 24
-	unusualItem    itemPrice = 6
-	usualItem      itemPrice = 2
-	lowQualityItem itemPrice = 1
-
-	minPotentialWinnersPart = 0.15
-	maxPotentialWinnersPart = 0.35
-	potentialWinnerStep     = maxPotentialWinnersPart - minPotentialWinnersPart
-)
-
-type LotteryResult struct {
-	Epic    int `json:"epic"`
-	Rare    int `json:"rare"`
-	Unusual int `json:"unusual"`
-	Usual   int `json:"usual"`
-	Low     int `json:"low"`
-}
-
-type LotteryResponse struct {
-	ParticipantsCount  int           `json:"participantsCount"`
-	BankPerParticipant float64       `json:"bankPerParticipant"`
-	Bank               float64       `json:"bank"`
-	BankRemain         float64       `json:"bankRemain"`
-	PotentialWinners   int           `json:"potentialWinners"`
-	Lottery            LotteryResult `json:"lottery"`
-}
-
-type LotteryOptions struct {
-	ParticipantsCount       int  `json:"participantsCount"  binding:"required"`
-	Rate                    int  `json:"rate"  binding:"required"`
-	QualityOverQuantityMode bool `json:"qualityOverQuantityMode"`
-}
-
-func (r *LotteryResponse) generateLotteryObject(qualityOverQuantityMode bool) {
+func (r *lotteryResponse) generateLotteryObject(qualityOverQuantityMode bool) {
 	if qualityOverQuantityMode {
 	BankLoop:
 		for r.BankRemain >= 1 {
@@ -98,15 +61,15 @@ func (r *LotteryResponse) generateLotteryObject(qualityOverQuantityMode bool) {
 	}
 }
 
-func (l LotteryOptions) GenerateLottery() LotteryResponse {
-	var respond LotteryResponse
+func (l lotteryOptions) generateLottery() lotteryResponse {
+	var respond lotteryResponse
 	respond.ParticipantsCount = l.ParticipantsCount
 	respond.BankPerParticipant = getBankPerParticipant(l.Rate)
 	respond.Bank = float64(l.ParticipantsCount) * respond.BankPerParticipant
 	respond.BankRemain = respond.Bank
 	respond.PotentialWinners = int(math.Round(
 		float64(l.ParticipantsCount) * (maxPotentialWinnersPart - (potentialWinnerStep * rand.Float64()))))
-	respond.Lottery = LotteryResult{0, 0, 0, 0, 0}
+	respond.Lottery = lotteryResult{0, 0, 0, 0, 0}
 	respond.generateLotteryObject(l.QualityOverQuantityMode)
 	return respond
 }

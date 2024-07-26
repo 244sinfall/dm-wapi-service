@@ -1,45 +1,17 @@
-package services
+package participants
 
 import (
 	"bufio"
-	regexp2 "regexp"
+	"regexp"
 	"strings"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
-type ParticipantsRequest struct {
-	RawText string `json:"rawText"  binding:"required"`
-}
 
-type ParticipantsResponse struct {
-	CleanedText string `json:"cleanedText"`
-	Count       int    `json:"cleanedCount"`
-	EditedLines string `json:"editedLines"`
-}
-
-var legitSuffixes = []string{
-	" W",
-	" D",
-	" M",
-	" WM",
-	" MW",
-	" WD",
-	" DW",
-}
-
-func CheckForLegitSuffixes(line string) (bool, string) {
-	for _, suffix := range legitSuffixes {
-		if strings.HasSuffix(line, suffix) {
-			return true, suffix
-		}
-	}
-	return false, ""
-}
-
-func (t ParticipantsRequest) CleanRawText() ParticipantsResponse {
-	var r ParticipantsResponse
+func (t participantsRequest) cleanRawText() participantsResponse {
+	var r participantsResponse
 	var count int
 	scanner := bufio.NewScanner(strings.NewReader(t.RawText))
 	for scanner.Scan() {
@@ -49,7 +21,7 @@ func (t ParticipantsRequest) CleanRawText() ParticipantsResponse {
 			continue
 		}
 		// Capitalize name + regexp handler
-		regexp, _ := regexp2.Compile("([А-яА-ЯЁё])+( [WDM]{1,2})?")
+		regexp, _ := regexp.Compile("([А-яА-ЯЁё])+( [WDM]{1,2})?")
 		foundRegexp := regexp.FindString(line)
 		makeTitle := cases.Title(language.Russian)
 		name, suffix, found := strings.Cut(foundRegexp, " ")
