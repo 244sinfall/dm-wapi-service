@@ -13,7 +13,7 @@ export const CheckStatusCompanion = {
     list: (): CheckStatus[] => ["Ожидает", "Закрыт", "Отказан"],
 }
 export const CheckStatusValue: Record<CheckStatus | "Все", string> = {
-    "Все": "Все", "Закрыт": "closed", "Ожидает": "open", "Отказан": "rejected"
+    "Все": "", "Закрыт": "Закрыт", "Ожидает": "Ожидает", "Отказан": "Отказан"
 
 }
 

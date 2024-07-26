@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,12 +10,13 @@ import (
 func ReceiveChecks(c *gin.Context) {
 	filter := new(checkRequestFilter)
 	err := c.BindQuery(&filter)
+	fmt.Println(filter)
 	if err != nil {
 		c.JSON(400, gin.H{"error": "Bad query: " + err.Error()})
 		return
 	}
-	checks, err := getChecks(&checkRequestFilter{})
-	if(err != nil) {
+	checks, err := getChecks(filter)
+	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed at getting checks: " + err.Error()})
 		return
 	}

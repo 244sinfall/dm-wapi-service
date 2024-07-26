@@ -81,37 +81,10 @@ func approve(id string, approveUser string) error {
 func update(id string, toUpdate claimedItem) (*claimedItem, error) {
 	f := globals.GetFirestore()
 	docRef := f.Doc("claimedItems/" + id)
-	// doc, err := docRef.Get(globals.GetGlobalContext())
-	// var item claimedItem
-	// err = doc.DataTo(&item)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// var reviewerChange bool
-	// if v.Name != toUpdate.Name || v.Link != toUpdate.Link || v.Reviewer != toUpdate.Reviewer {
-	// 			if admin {
-	// 				if v.Reviewer != toUpdate.Reviewer {
-	// 					reviewerChange = true
-	// 				}
-	// 				v.Name = toUpdate.Name
-	// 				v.Link = toUpdate.Link
-	// 				v.Reviewer = toUpdate.Reviewer
-	// 			}
-	// 		}
-	// 		v.Owner = toUpdate.Owner
-	// 		v.OwnerProfile = toUpdate.OwnerProfile
-	// 		v.OwnerProofLink = toUpdate.OwnerProofLink
-	// 		v.AdditionalInfo = toUpdate.AdditionalInfo
-	// if !reviewerChange {
-	// 	if !strings.Contains(v.Reviewer, editorName) {
-	// 		y, m, d := time.Now().Date()
-	// 		v.Reviewer += fmt.Sprintf("\nИзменил: %v (%v.%v.%v)", editorName, d, int(m), y)
-	// 	}
-	// }
 	rx, _ := regexp.Compile("[0-9]+")
 	toUpdate.OwnerProofName = "№ " + rx.FindString(toUpdate.OwnerProofLink)
 	_, err := docRef.Set(globals.GetGlobalContext(), toUpdate)
+	invalidateCache()
 	return &toUpdate, err
 
 }
@@ -146,7 +119,6 @@ func getClaimedItems() map[string][]claimedItem {
 	items, found := c.Get("items")
 	if !found {
 		newItems := fetchClaimedItems()
-		c.Set("items", newItems, cache.DefaultExpiration)
 		newItemsMapped := make(map[string][]claimedItem, 100)
 		for _, item := range newItems {
 			if list, ok := newItemsMapped[item.GetKey()]; ok {
@@ -158,6 +130,7 @@ func getClaimedItems() map[string][]claimedItem {
 				newItemsMapped[item.GetKey()] = newArr
 			}
 		}
+		c.Set("items", newItemsMapped, cache.DefaultExpiration)
 		return newItemsMapped
 	}
 	return items.(map[string][]claimedItem)
