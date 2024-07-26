@@ -54,14 +54,14 @@ const WelcomeNewUser = (props: WelcomeNewUserProps) => {
                     {props.error && <p className="auth-window__error">{props.error}</p>}
                     <div className='auth-window__controls'>
                         {formState === "auth" && 
-                            <span>
+                            <>
                                 <ActionButton title={"Войти"} type={"submit"}
                                                                disabled={props.isLoading}
                                                          onClick={callbacks.onSubmit}/>
-                                <ActionButton title={"Сбросить пароль"}
+                                <ActionButton title={"Сбросить пароль (todo)"}
                                                         disabled={props.isLoading}
                                                         onClick={() => props.onReset(value.current)}/>
-                            </span>}
+                            </>}
                         {formState === "reg" && <ActionButton title={"Зарегистрироваться"} type={"submit"}
                                                         disabled={props.isLoading} onClick={callbacks.onSubmit}/>}
                         <ActionButton title={formState === "reg" ? "К авторизации" : "К регистрации"}

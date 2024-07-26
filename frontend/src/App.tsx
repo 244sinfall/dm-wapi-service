@@ -16,8 +16,6 @@ import {changeTheme} from "./model/theme";
 import {Theme} from "./model/theme/types";
 import GobSearcherPage from "./ui/gob-searcher/gob-searcher-page";
 import ConnectPage from './ui/auth/connect-page';
-import { useStore } from 'react-redux';
-
 
 
 function App() {

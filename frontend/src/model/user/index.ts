@@ -50,10 +50,12 @@ const userSlice = createSlice({
     initialState: userInitialState,
     reducers: {
         setUser(state, action: PayloadAction<UserStateUserInfo>) {
+            localStorage.setItem("hasFirebaseSession", "true")
             state.user = action.payload
             state.isLoading = false
         },
         resetUser(state) {
+            localStorage.removeItem("hasFirebaseSession")
             state.user = DefaultUserState
         },
         setApiUser(state, action: PayloadAction<ApiAuthUser>) {
