@@ -27,8 +27,6 @@ func getChecks(filter *checkRequestFilter) (*checkResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	// resText, _ := ioutil.ReadAll(response.Body)
-	// fmt.Println(string(resText[:]))
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&newChecksResponse)
 	response.Body.Close()
@@ -36,7 +34,6 @@ func getChecks(filter *checkRequestFilter) (*checkResponse, error) {
 		fmt.Println("Error decoding checks: " + err.Error())
 		return nil, err
 	}
-	fmt.Println(newChecksResponse)
 	if len(newChecksResponse.Result) == 0 {
 		return nil, errors.New("nothing parsed")
 	}
