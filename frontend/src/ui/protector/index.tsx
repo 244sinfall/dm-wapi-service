@@ -1,19 +1,19 @@
 import React, {useMemo} from 'react';
-import {PERMISSION, PermissionValue} from "../../model/user";
+import {PermissionValue} from "../../model/user/types";
 import AccountManager from "../auth";
 import ProtectorFrame from "../../components/protector/frame";
 import ProtectorNoAccess from "../../components/protector/no-access";
-import {useAppDispatch, useAppSelector} from "../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../store";
 import ProtectorNotConnected from '../../components/protector/not-connected';
 import { useNavigate } from 'react-router-dom';
-import { connectToDarkmoon, destroySession } from '../../model/user/reducer';
+import { connectToDarkmoon } from '../../model/user/';
 
 const Protector = (props: {children: React.ReactNode[] | React.ReactNode, accessLevel: PermissionValue}) => {
     const currentUser = useAppSelector(state => state.user.user)
     const nav = useNavigate()
     const dispatch = useAppDispatch()
     const protector = useMemo(() => {
-        if(!currentUser.email) {
+        if(!currentUser.token) {
             return <AccountManager />
         }
         if(currentUser.apiUser == null) {
@@ -22,11 +22,11 @@ const Protector = (props: {children: React.ReactNode[] | React.ReactNode, access
                 nav('/')
             }} onCancel={() => nav('/')}/>
         }
-        if(currentUser.permission < props.accessLevel) {
+        if(currentUser.apiUser.permission < props.accessLevel) {
             return <ProtectorNoAccess/>
         }
         
-    }, [currentUser,props.accessLevel])
+    }, [currentUser, props.accessLevel, dispatch, nav])
     
     return (
         <>

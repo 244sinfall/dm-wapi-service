@@ -2,12 +2,12 @@ import React, {useCallback, useMemo, useState} from 'react';
 import {ClaimedItemInterface} from "../../../model/claimed-items/types";
 import ModalTitle from "../../common/modal-title";
 import TextInput from "../../common/text-input";
-import {PERMISSION} from "../../../model/user";
+import {PERMISSION} from "../../../model/user/types";
 import ActionButton from "../../common/action-button";
 import Field from "../../common/field";
 import './styles.css'
 import apiStringDateToString from "../../../utils/api-string-date-to-string";
-import {UserStateUserInfo} from "../../../model/user/reducer";
+import {UserStateUserInfo} from "../../../model/user/types";
 
 export type ClaimedItemEditorProps = {
     onEdit: (editedItem: ClaimedItemInterface) => Promise<void>,
@@ -31,13 +31,13 @@ const ClaimedItemEditor = (props: ClaimedItemEditorProps) => {
             </Field>
             <Field title="Название" containerOptions={containerOptions}>
                 <TextInput maxLength={256}
-                           disabled={props.user.permission < PERMISSION.Admin}
+                           disabled={props.user.apiUser != null && props.user.apiUser.permission < PERMISSION.Admin}
                            onChange={newName => handleChange("name", newName)}
                            value={changeable.name}/>
             </Field>
             <Field title="Ссылка на предмет" containerOptions={containerOptions}>
                 <TextInput maxLength={256}
-                           disabled={props.user.permission < PERMISSION.Admin}
+                           disabled={props.user.apiUser != null && props.user.apiUser.permission < PERMISSION.Admin}
                            onChange={newLink => handleChange("link", newLink)}
                            value={changeable.link}/>
             </Field>
@@ -58,7 +58,7 @@ const ClaimedItemEditor = (props: ClaimedItemEditorProps) => {
             </Field>
             <Field title="Согласовавший рецензент" containerOptions={containerOptions}>
                 <TextInput maxLength={256}
-                           disabled={props.user.permission < PERMISSION.Admin}
+                           disabled={props.user.apiUser != null && props.user.apiUser.permission < PERMISSION.Admin}
                            onChange={newReviewer => handleChange("reviewer", newReviewer)}
                            value={changeable.reviewer}/>
             </Field>
@@ -85,13 +85,13 @@ const ClaimedItemEditor = (props: ClaimedItemEditorProps) => {
                            value={changeable.additionalInfo}/>
             </Field>
             <div className="claimed-item-editor-controls">
-                {props.user.permission >= PERMISSION.GM &&
+                {props.user.apiUser != null && props.user.apiUser.permission >= PERMISSION.GM &&
                   <ActionButton title="Изменить"
                                 onClick={() => props.onEdit(changeable)}/>}
-                {props.user.permission >= PERMISSION.Admin &&
+                {props.user.apiUser != null && props.user.apiUser.permission >= PERMISSION.Admin &&
                   <ActionButton title="Утвердить"
                                 onClick={() => props.onApprove(props.item.id)}/>}
-                {props.user.permission >= PERMISSION.Admin &&
+                {props.user.apiUser != null && props.user.apiUser.permission >= PERMISSION.Admin &&
                   <ActionButton title="Удалить"
                                 onClick={() => props.onDelete(props.item.id)} />}
             </div>

@@ -1,24 +1,25 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import {BrowserRouter} from "react-router-dom";
 import {Provider} from "react-redux";
-import ServicesProviderContext from "./services/context";
-import ServicesProvider from "./services";
+import Store from './store'
+import { onAuthStateChanged } from 'firebase/auth';
+import { restoreSession } from './model/user';
+import { auth } from './auth';
 
-const services = new ServicesProvider()
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
 root.render(
-    <ServicesProviderContext services={services}>
       <BrowserRouter>
-          <Provider store={services.get("Store").getInstance()}>
-              <App />
+          <Provider store={Store}>
+                <App />
           </Provider>
       </BrowserRouter>
-    </ServicesProviderContext>
 );
 
+onAuthStateChanged(auth, user => {
+  Store.dispatch(restoreSession(user))
+})

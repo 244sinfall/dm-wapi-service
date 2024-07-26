@@ -7,16 +7,16 @@ import MainPage from "./ui/main-page";
 import EventsPage from "./ui/events/events-page";
 import OtherPage from "./ui/other/other-page";
 import ArbitersPage from "./ui/arbiters/arbiters-page";
-import AdminPage from "./ui/admin/admin-page";
 import EconomicsPage from "./ui/economics/economics-page";
 import ClaimedItemsPage from "./ui/claimed-items";
-import {PERMISSION} from "./model/user";
+import {PERMISSION} from "./model/user/types";
 import {Types} from "./model/header/types";
-import {useAppDispatch, useAppSelector} from "./services/services/store";
+import {useAppDispatch, useAppSelector} from "./store";
 import {changeTheme} from "./model/theme";
 import {Theme} from "./model/theme/types";
 import GobSearcherPage from "./ui/gob-searcher/gob-searcher-page";
 import ConnectPage from './ui/auth/connect-page';
+import { useStore } from 'react-redux';
 
 
 
@@ -61,7 +61,6 @@ function App() {
                 <Route path='/other' element={<OtherPage/>}/>
                 <Route path='/arbitration' element={<ArbitersPage/>}/>
                 <Route path='/economics' element={<EconomicsPage/>}/>
-                <Route path='/admin' element={<AdminPage/>}/>
                 <Route path='/connect' element={<ConnectPage/>}/>
                 <Route path='/gob' element={<GobSearcherPage/>}/>
                 <Route path='/' element={<MainPage/>}/>

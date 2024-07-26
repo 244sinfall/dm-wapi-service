@@ -2,10 +2,10 @@ import React, {useCallback, useEffect, useMemo} from 'react';
 import ClaimedItemsWrapper from "../../components/claimed-items";
 import ClaimedItemTable from "./wrapper";
 import {claimedItemsAsyncActions, setSearch} from "../../model/claimed-items/reducer";
-import {useAppDispatch, useAppSelector} from "../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../store";
 import ClaimedItemModal from "./modal";
 import {ClaimedItemsHTMLGenerator} from "../../model/claimed-items/generator";
-import {PERMISSION} from "../../model/user";
+import {PERMISSION} from "../../model/user/types";
 
 const ClaimedItemsPage = () => {
     const operationCallbacks = useMemo(() => claimedItemsAsyncActions, [])
@@ -29,7 +29,7 @@ const ClaimedItemsPage = () => {
 
     return (
         <ClaimedItemsWrapper currentSearch={state.search}
-                             canGenerateHTML={state.user.permission >= PERMISSION.Admin}
+                             canGenerateHTML={state.user.apiUser != null && state.user.apiUser.permission >= PERMISSION.Admin}
                              onHTMLGenerate={callbacks.onHTMLGenerate}
                              onSearch={(newSearch) => dispatch(setSearch(newSearch))}
                              error={state.error}>

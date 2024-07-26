@@ -1,7 +1,7 @@
 import React, {useCallback} from 'react';
 import {BusinessRewardInfo} from "../../../model/arbiters/business/types";
 import BusinessReward from "../../../components/arbiters/business-reward";
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from ".././../../store";
 import {setCommand, setFields} from "../../../model/arbiters/business/reducer";
 
 const BusinessActivityRewardGiver = () => {

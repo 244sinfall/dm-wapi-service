@@ -2,7 +2,7 @@ import React from 'react';
 import CharsheetReviewRateCounter from "../rate-counter";
 import CharsheetReviewGenerator from "../review-generator";
 import Protector from "../../protector";
-import {PERMISSION} from "../../../model/user";
+import {PERMISSION} from "../../../model/user/types";
 import {LayoutResponsiveGrid} from "../../../components/common/layouts/responsive-grid";
 
 const CharsheetPage = () => {

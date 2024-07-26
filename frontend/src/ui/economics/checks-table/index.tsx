@@ -1,9 +1,9 @@
 import React, {useCallback, useEffect, useRef} from 'react';
-import {PERMISSION} from "../../../model/user";
+import {PERMISSION} from "../../../model/user/types";
 import CheckRow from "../../../components/economics/checktable/table/row";
 import {CheckTableParams, ICheck} from "../../../model/economics/checks/types";
 import CheckTableWrapper from "../../../components/economics/checktable";
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../../store";
 import {fetchChecks, removeSelectedCheck, setParams, setSelectedCheck} from "../../../model/economics/checks/reducer";
 
 const ChecksTable = () => {
@@ -21,9 +21,6 @@ const ChecksTable = () => {
     },[state.checks.params, dispatch])
     
     const callbacks = {
-        onForce: useCallback(() => {
-            dispatch(setParams({...state.checks.params, force: true, skip: 0}))
-        }, [state.checks.params, dispatch]),
         onParamsChange: useCallback(<K extends keyof CheckTableParams,V extends CheckTableParams[K]>(key: K, value: V) => {
             if(key === "search") {
                 if(searchDebounce.current) clearTimeout(searchDebounce.current)
@@ -46,14 +43,12 @@ const ChecksTable = () => {
 
     return (
         <CheckTableWrapper renderCheck={callbacks.renderCheck}
-                           onForce={callbacks.onForce}
                            isLoading={state.checks.isLoading}
-                           isUserAbleToForce={state.user.permission >= PERMISSION.GM}
                            onParamsChange={callbacks.onParamsChange}
                            params={state.checks.params}
                            error={state.checks.error}
                            response={state.checks.result}
-                           modal={state.checks.selectedCheck && state.user.permission >= PERMISSION.Arbiter ? {
+                           modal={state.checks.selectedCheck && state.user.apiUser && state.user.apiUser.permission >= PERMISSION.Arbiter ? {
                                check: state.checks.selectedCheck,
                                onClose: () => dispatch(removeSelectedCheck())
                            }: undefined}/>

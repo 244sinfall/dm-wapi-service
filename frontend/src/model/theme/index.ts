@@ -8,7 +8,7 @@ const initialTheme = () => {
     }
     return theme;
 }
-export const themeSlice = createSlice({
+const themeSlice = createSlice({
     name: 'theme',
     initialState: {selected: initialTheme()},
     reducers: {
@@ -18,5 +18,7 @@ export const themeSlice = createSlice({
         }
     }
 });
+
+export default themeSlice.reducer
 
 export const { changeTheme } = themeSlice.actions;

@@ -5,7 +5,7 @@ import RewardDistributionDefaultState, {
     RewardDistributionResponse
 } from "./types";
 import {APIResponseKnownError} from "../../exceptions";
-import {createAppAsyncThunk} from "../../reduxTypes";
+import { createAppAsyncThunk } from "../../../thunk";
 
 export const requestEventRewardDistribution = createAppAsyncThunk("event-rewards/fetch", async(_, thunkAPI) => {
     function isValidResponse(data: unknown): data is RewardDistributionResponse {
@@ -15,10 +15,15 @@ export const requestEventRewardDistribution = createAppAsyncThunk("event-rewards
     if(!state.eventLink || !state.participantsCleanedText) return thunkAPI.rejectWithValue(new Error("Не заполнены поля"))
     if(!state.mode) return thunkAPI.rejectWithValue(new Error("Не выбран режим"))
     if(!state.rate) return thunkAPI.rejectWithValue(new Error("Награда не положена"))
-    const mode = state.mode
-    const body = JSON.stringify({...state, error: undefined, mode: RewardDistributionModeValue[mode]}) // Только то, что отправляется на сервер
+    const mode: string = RewardDistributionModeValue[state.mode as keyof typeof RewardDistributionModeValue]
+
+    const body = JSON.stringify({...state, error: undefined, mode}) // Только то, что отправляется на сервер
     try {
-        const response = await thunkAPI.extra.get("API").createRequest("arbiters.rewardWork", "", body)
+        const token = thunkAPI.getState().user.user.token;
+        if(!token){
+            throw new Error("Not authorized")
+        }
+        const response = await thunkAPI.extra.createRequest("arbiters.rewardWork", "", body, token)
         const json = await response.json()
         if(!isValidResponse(json)) thunkAPI.rejectWithValue(new Error("Некорректный ответ от сервера"))
         let result = json.commands

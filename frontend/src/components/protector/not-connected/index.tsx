@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ContentTitle from "../../common/content-title";
 import ActionButton from "../../common/action-button";
 import './styles.css'
-import {useNavigation} from "react-router-dom";
 import TextInput from '../../common/text-input';
 
 type ProtectorNotConnectedProps = {

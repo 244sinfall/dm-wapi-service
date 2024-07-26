@@ -1,5 +1,5 @@
 import React, {useEffect,  useState} from 'react';
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../../store";
 import {setPage, setPerPage, setSearch} from "../../../model/arbiters/items/reducer";
 import {ArbiterItemInfo} from "../../../model/arbiters/items/types";
 import ItemTableWrapper from "../../../components/arbiters/itemstable";
@@ -15,7 +15,7 @@ const ArbiterItemsTable = () => {
     useEffect(() => {
         let items = state.items;
         if(state.search) {
-            items = items.filter(entry => String(entry.id).includes(state.search) ||
+            items = items.filter((entry: ArbiterItemInfo) => String(entry.id).includes(state.search) ||
             entry.name.includes(state.search) || entry.description.includes(state.search) ||
             entry.quality.includes(state.search))
         }

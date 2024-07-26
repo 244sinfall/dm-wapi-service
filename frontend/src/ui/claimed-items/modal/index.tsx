@@ -1,5 +1,5 @@
 import React, {useMemo} from 'react';
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../../store";
 import ClaimedItemAdder from "../../../components/claimed-items/add";
 import {
     claimedItemsAsyncActions,

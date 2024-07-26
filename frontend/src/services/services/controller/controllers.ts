@@ -1,5 +1,0 @@
-export {UserController as Player} from './controllers/player'
-export {default as GM} from './controllers/gm'
-export {default as Arbiter} from './controllers/arbiter'
-export {default as Reviewer} from './controllers/reviewer'
-export {default as Admin} from './controllers/admin'

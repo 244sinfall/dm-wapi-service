@@ -2,7 +2,7 @@ import React from 'react';
 import TextCleaner from "../../common/participants-cleaner";
 import LotteryCreator from "../lottery-creator";
 import Protector from "../../protector";
-import {PERMISSION} from "../../../model/user";
+import {PERMISSION} from "../../../model/user/types";
 import {LayoutResponsiveGrid} from "../../../components/common/layouts/responsive-grid";
 
 

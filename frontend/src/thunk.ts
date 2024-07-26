@@ -1,7 +1,6 @@
-import {AsyncThunk, AsyncThunkOptions, AsyncThunkPayloadCreator, createAsyncThunk} from "@reduxjs/toolkit";
-import ServicesProvider from "../services";
-import {AppDispatch, RootState} from "../services/services/store";
-
+import { AsyncThunk, AsyncThunkOptions, AsyncThunkPayloadCreator, createAsyncThunk } from "@reduxjs/toolkit"
+import API from "./api"
+import { AppDispatch, RootState } from "./store"
 
 type AsyncThunkConfig = {
     /** return type for `thunkApi.getState` */
@@ -9,7 +8,7 @@ type AsyncThunkConfig = {
     /** type for `thunkApi.dispatch` */
     dispatch?: AppDispatch
     /** type of the `extra` argument for the thunk middleware, which will be passed in as `thunkApi.extra` */
-    extra?: ServicesProvider
+    extra?: API
     /** type to be passed into `rejectWithValue`'s first argument that will end up on `rejectedAction.payload` */
     rejectValue?: Error
     /** return type of the `serializeError` option callback */
@@ -29,5 +28,5 @@ type TypedCreateAsyncThunk<ThunkApiConfig extends AsyncThunkConfig> = <Returned,
 
 export const createAppAsyncThunk: TypedCreateAsyncThunk<{
     state: RootState,
-    extra: ServicesProvider
+    extra: API
 }> = createAsyncThunk;

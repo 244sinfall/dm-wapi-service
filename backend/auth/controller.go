@@ -9,26 +9,24 @@ import (
 )
 
 func ResetUserPassword(c *gin.Context) {
+	body := new(resetRequestBody)
+	err := c.BindJSON(&body)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Bad request: " + err.Error()})
+	}
 	auth := globals.GetAuth()
-	authHeader := c.Request.Header.Get("Authorization")
-	token, err := auth.VerifyIDToken(globals.GetGlobalContext(), authHeader)
+	fbUser, err := auth.GetUserByEmail(globals.GetGlobalContext(), body.Email)
 	if err != nil {
-		c.JSON(401, gin.H{"error": "Error auth: " + err.Error()})
+		c.JSON(404, gin.H{"error": "Error auth: " + err.Error()})
 		return
 	}
-	user, err := auth.GetUser(globals.GetGlobalContext(), token.UID)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	_, err = auth.PasswordResetLink(globals.GetGlobalContext(), user.Email)
+	_, err = auth.PasswordResetLink(globals.GetGlobalContext(), fbUser.Email)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(200)
 }
-
 
 func ConnectToAuthService(c *gin.Context) {
 	auth := globals.GetAuth()

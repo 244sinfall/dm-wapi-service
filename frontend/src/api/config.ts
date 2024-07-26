@@ -4,7 +4,6 @@ const APIConfig = {
         "users.me": {
             url: "/v2/users/me",
             method: "GET",
-            auth: true,
             accept: "application/json"
         },
         "users.connect": {
@@ -16,7 +15,7 @@ const APIConfig = {
         "users.reset": {
             url: "/users/reset",
             method: "POST",
-            auth: true,
+            auth: false,
             accept: "application/json"
         },
         "charReview.generate": {

@@ -9,25 +9,26 @@ import {
     ICheck
 } from "./types";
 import {APIResponseKnownError} from "../../exceptions";
-import {createAppAsyncThunk} from "../../reduxTypes";
+import { createAppAsyncThunk } from "../../../thunk";
+
 
 export const fetchChecks = createAppAsyncThunk("checks/fetch", async(_, thunkAPI) => {
     let delimiter = "&"
     let query = "?"
-    const state = thunkAPI.extra.get("Store").getInstance().getState().checks.params
+    const state = thunkAPI.getState().checks.params
     for(let prop in state) {
         if(!CheckTableParamsCompanion.is(prop)) continue
         if(state[prop]) {
             if(prop === "status" && state[prop] === "Все") continue;
             if(prop === "category" && state[prop] === "Все получатели") continue;
             if(query.length !== 1) query += delimiter
-            query += `${prop}=${String(prop === "status" ? CheckStatusValue[state[prop]] : state[prop])}`
+            query += `${prop}=${String(prop === "status" ? CheckStatusValue[state[prop] as keyof typeof CheckStatusValue] : state[prop])}`
         }
     }
     function isApiResponseIsData(data: unknown): data is CheckResponse {
         return typeof data === "object" && data != null && "checks" in data
     }
-    const response = await thunkAPI.extra.get("API").createRequest("checks.get",
+    const response = await thunkAPI.extra.createRequest("checks.get",
         query)
     const data = await response.json()
     if(!isApiResponseIsData(data))

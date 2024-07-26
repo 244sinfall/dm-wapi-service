@@ -12,6 +12,7 @@ type WelcomeNewUserProps = {
     isLoading: boolean,
     onRegister: (credentials: UserRegisterCredentials) => Promise<unknown>
     onLogin: (credentials: UserLoginCredentials) => Promise<unknown>
+    onReset: (credentials: UserLoginCredentials) => Promise<unknown>
     onCaptcha: (success: boolean) => void
     error?: string
 }
@@ -52,17 +53,23 @@ const WelcomeNewUser = (props: WelcomeNewUserProps) => {
                       </Field>}
                     {props.error && <p className="auth-window__error">{props.error}</p>}
                     <div className='auth-window__controls'>
-                        {formState === "auth" && <ActionButton title={"Войти"} type={"submit"}
+                        {formState === "auth" && 
+                            <span>
+                                <ActionButton title={"Войти"} type={"submit"}
                                                                disabled={props.isLoading}
-                                                         onClick={callbacks.onSubmit}/>}
+                                                         onClick={callbacks.onSubmit}/>
+                                <ActionButton title={"Сбросить пароль"}
+                                                        disabled={props.isLoading}
+                                                        onClick={() => props.onReset(value.current)}/>
+                            </span>}
                         {formState === "reg" && <ActionButton title={"Зарегистрироваться"} type={"submit"}
                                                         disabled={props.isLoading} onClick={callbacks.onSubmit}/>}
                         <ActionButton title={formState === "reg" ? "К авторизации" : "К регистрации"}
                                       onClick={() => setFormState(prev => prev === "reg" ? "auth" : "reg")} />
                     </div>
-                    {/* <Turnstile siteKey={"0x4AAAAAAAD0fdup-VPB9kq_"}
+                    <Turnstile siteKey={"0x4AAAAAAAD0fdup-VPB9kq_"}
                                onError={() => props.onCaptcha(false)}
-                               onSuccess={() => props.onCaptcha(true)}/> */}
+                               onSuccess={() => props.onCaptcha(true)}/>
                 </form>
             </LoadingSpinner>
         </ContentTitle>

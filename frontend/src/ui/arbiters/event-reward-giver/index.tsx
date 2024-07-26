@@ -1,6 +1,6 @@
 import React, {useCallback, useState} from 'react';
 import EventRewardMacroMaker from "../../../components/arbiters/event-reward-macro-maker";
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from ".././../../store";
 import {
     requestEventRewardDistribution,
     setDistributionMode,
@@ -21,7 +21,7 @@ const EventRewardGiver = () => {
         splitCommandsToFitMacro: useCallback(() => {
             const initial = state.result
             let separateCounter = 0
-            const result = initial.split("\n").map((str) => {
+            const result = initial.split("\n").map((str: string) => {
                 if (str.startsWith(".")) {
                     if (separateCounter + str.length <= 254) {
                         separateCounter += str.length

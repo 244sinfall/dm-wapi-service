@@ -1,8 +1,6 @@
-import Service from "../service";
 import Config from './config'
-import {APIResponseKnownError} from "../../../model/exceptions";
 
-export default class API extends Service {
+export default class API {
     protected config = Config
 
     /**
@@ -15,13 +13,14 @@ export default class API extends Service {
     async createRequest<PayloadType extends BodyInit | void = void>(
                             endpoint: keyof typeof Config["endpoints"],
                             params: string = "",
-                            payload?: PayloadType): Promise<Response> {
+                            payload?: PayloadType,
+                            token?: string): Promise<Response> {
 
         const init: RequestInit = {}
         init.headers = []
         init.method = Config.endpoints[endpoint].method
-        if(Config.endpoints[endpoint].auth) {
-            init.headers.push(["Authorization", await this.services.get("FirebaseUser").getToken()])
+        if(token) {
+            init.headers.push(["Authorization", token])
         }
         if(typeof payload === "object") {
             init.headers.push(["Content-Type", "application/json"])

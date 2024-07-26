@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import ContentTitle from "../../../components/common/content-title";
 import GobSearcherFilter from "../../../components/gob-searcher/filter";
 import GobSearcherTable from "../../../components/gob-searcher";
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../../store";
 import {fetchGameObjects, setPage, setSearch, setType} from "../../../model/gob-searcher/reducer";
 import {GameObject, GameObjectTypeToName} from "../../../model/gob-searcher/types";
 import GameObjectRow from "../../../components/gob-searcher/row";

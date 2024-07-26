@@ -1,7 +1,7 @@
-import {createAppAsyncThunk} from "../reduxTypes";
 import {GameObject, GameObjectTypeFilter} from "./types";
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 import initialState from './types'
+import { createAppAsyncThunk } from "../../thunk";
 
 export const fetchGameObjects = createAppAsyncThunk("gob-searcher/fetch", async(_, thunkAPI) => {
     function isError(data: unknown): data is { error: string } {
@@ -14,7 +14,11 @@ export const fetchGameObjects = createAppAsyncThunk("gob-searcher/fetch", async(
         }
         return false
     }
-    const data = await thunkAPI.extra.get("API").createRequest("gobs.get")
+    const token = await thunkAPI.getState().user.user.token;
+    if(!token){
+        throw new Error("Not authorized")
+    }
+    const data = await thunkAPI.extra.createRequest("gobs.get", undefined, undefined, token)
     const response = await data.json()
     if(isError(response)) return thunkAPI.rejectWithValue(new Error(response.error))
     if(!hasResult(response)) return thunkAPI.rejectWithValue(new Error("Неизвестный формат данных"))

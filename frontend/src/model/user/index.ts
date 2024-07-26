@@ -1,44 +1,66 @@
-export const PERMISSION = {
-    Player: 0,
-    GM: 1,
-    Arbiter: 2,
-    Admin: 3
-} as const
+import {
+    createSlice,
+    PayloadAction,
 
-export type PermissionTitle = keyof typeof PERMISSION;
+} from "@reduxjs/toolkit";
+import {ApiAuthUser, UserStateUserInfo} from "./types";
+import { createAppAsyncThunk } from "../../thunk";
+import { User } from "firebase/auth";
 
-export type PermissionValue = typeof PERMISSION[PermissionTitle]
 
-export type PermissionName = "Игрок" | "ГМ" | "Арбитр" | "Админ"
-
-export const PermissionNameByValue: Record<PermissionValue, PermissionName> = {
-    [PERMISSION.Admin]: "Админ",
-    [PERMISSION.Arbiter]: "Арбитр",
-    [PERMISSION.GM]: "ГМ",
-    [PERMISSION.Player]: "Игрок"
+const DefaultUserState: UserStateUserInfo = {
+    email: "",
+    token: "",
+    name:"Гость",
+    apiUser: null,
 }
 
-export const PermissionTitleByValue: Record<PermissionValue, PermissionTitle> = {
-    [PERMISSION.Admin]: "Admin",
-    [PERMISSION.Arbiter]: "Arbiter",
-    [PERMISSION.GM]: "GM",
-    [PERMISSION.Player]: "Player"
+const userInitialState = {
+    user: DefaultUserState,
+    isLoading: !!localStorage.getItem("hasFirebaseSession")
 }
 
-export const PermissionValueByName: Record<PermissionName, PermissionValue> = {
-    "Админ": 3,
-    "Арбитр": 2,
-    "ГМ": 1,
-    "Игрок": 0
-}
+export const connectToDarkmoon = createAppAsyncThunk("user/connectToDarkmoon", async(code: string, thunkAPI) => {
+    const response = await thunkAPI.extra.createRequest("users.connect", "", JSON.stringify({code: code}));
+    const responseJson = await response.json();
+    if(!response.ok) {
+        return null;
+    }
+    thunkAPI.dispatch(userSlice.actions.setApiUser(responseJson as ApiAuthUser))
+})
 
-/**
- * Схема хранения данных о пользователе в Cloud Firestore
- */
-export type FirestoreUserData = {
-    name: string,
-    permission: PermissionValue,
-    email: string
-}
+export const restoreSession = createAppAsyncThunk("user/restoreSession", async(user: User | null, thunkAPI) => {
+    if(!user){
+        thunkAPI.dispatch(userSlice.actions.resetUser())
+        return
+    }
+    const token = await user.getIdToken()
+    let apiAuthUser: ApiAuthUser | null = null
+    const response = await thunkAPI.extra.createRequest("users.me", undefined, undefined, token)
+    if(response.ok){
+        const json = await response.json();
+        const userData = json as ApiAuthUser
+        apiAuthUser = userData
+    }
+    thunkAPI.dispatch(userSlice.actions.setUser({ email: user.email ?? "unknown", token, name: user.displayName ?? "Пользователь", apiUser: apiAuthUser }))
+})
 
-export const PermissionNames: PermissionName[] = ["Игрок", "ГМ", "Арбитр", "Админ"]
+const userSlice = createSlice({
+    name: "user", 
+    initialState: userInitialState,
+    reducers: {
+        setUser(state, action: PayloadAction<UserStateUserInfo>) {
+            state.user = action.payload
+            state.isLoading = false
+        },
+        resetUser(state) {
+            state.user = DefaultUserState
+        },
+        setApiUser(state, action: PayloadAction<ApiAuthUser>) {
+            state.user.apiUser = action.payload
+            state.isLoading = false
+        },
+    }
+})
+
+export default userSlice.reducer

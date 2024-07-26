@@ -1,4 +1,4 @@
-import {PermissionValue} from "../user";
+import {PermissionValue} from "../user/types";
 
 export interface Types {
     menuName: string,

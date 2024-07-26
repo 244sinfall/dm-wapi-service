@@ -54,6 +54,10 @@ type connectRequestBody struct {
 	Code string `json:"code"`
 }
 
+type resetRequestBody struct {
+	Email string `json:"email"`
+}
+
 type WapiAuthenticatedUser struct {
 	UserId            int    `json:"userId"`
 	IntegrationUserId string `json:"integrationUserId"`

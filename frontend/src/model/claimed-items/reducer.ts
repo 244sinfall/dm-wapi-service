@@ -6,15 +6,16 @@ import {
     DefaultClaimedItemPages,
     DefaultClaimedItemState
 } from "./types";
-import {createAppAsyncThunk} from "../reduxTypes";
 import {APIResponseKnownError, StructureException} from "../exceptions";
+import { createAppAsyncThunk } from "../../thunk";
+
 
 const getClaimedItemsContent = createAppAsyncThunk("claimedItems/fetch", async(_, thunkAPI) => {
     try {
         function isResponse(data: unknown): data is { result: ClaimedItemsTables } {
             return typeof data === "object" && data !== null && "result" in data
         }
-        const response = await thunkAPI.extra.get("API").createRequest("claimedItems.get")
+        const response = await thunkAPI.extra.createRequest("claimedItems.get")
         const json = await response.json()
         if(isResponse(json)) return json.result
         return thunkAPI.rejectWithValue(new StructureException("Некорретная структура данных"))
@@ -28,6 +29,10 @@ const getClaimedItemsContent = createAppAsyncThunk("claimedItems/fetch", async(_
 
 const addClaimedItem = createAppAsyncThunk("claimedItems/add", async(item: Partial<ClaimedItemMinimal>, thunkAPI) => {
     try {
+        const token = thunkAPI.getState().user.user.token;
+        if(!token){
+            throw new Error("Not authorized")
+        }
         const merged = Object.assign({
             accepted: false,
             acceptedAt: new Date(),
@@ -44,7 +49,7 @@ const addClaimedItem = createAppAsyncThunk("claimedItems/add", async(item: Parti
             quality: "",
             reviewer: "",
         }, item)
-        await thunkAPI.extra.get("API").createRequest("claimedItems.create", "", JSON.stringify({...merged}))
+        await thunkAPI.extra.createRequest("claimedItems.create", "", JSON.stringify({...merged}), token)
         return merged
     } catch (e: unknown) {
         if(e instanceof APIResponseKnownError) {
@@ -56,7 +61,11 @@ const addClaimedItem = createAppAsyncThunk("claimedItems/add", async(item: Parti
 
 const updateClaimedItem = createAppAsyncThunk("claimedItems/update", async(changes: ClaimedItemInterface, thunkAPI) => {
     try {
-        await thunkAPI.extra.get("API").createRequest("claimedItems.update", `/${changes.id}`, JSON.stringify(changes))
+        const token = await thunkAPI.getState().user.user.token;
+        if(!token){
+            throw new Error("Not authorized")
+        }
+        await thunkAPI.extra.createRequest("claimedItems.update", `/${changes.id}`, JSON.stringify(changes), token)
         return changes
     } catch (e: unknown) {
         if(e instanceof APIResponseKnownError) {
@@ -68,7 +77,11 @@ const updateClaimedItem = createAppAsyncThunk("claimedItems/update", async(chang
 
 const approveClaimedItem = createAppAsyncThunk("claimedItems/approve", async(id: string, thunkAPI) => {
     try {
-        await thunkAPI.extra.get("API").createRequest("claimedItems.approve", `/${id}`)
+        const token = await thunkAPI.getState().user.user.token;
+        if(!token){
+            throw new Error("Not authorized")
+        }
+        await thunkAPI.extra.createRequest("claimedItems.approve", `/${id}`, undefined, token)
         return id
     } catch (e: unknown) {
         if(e instanceof APIResponseKnownError) {
@@ -80,7 +93,11 @@ const approveClaimedItem = createAppAsyncThunk("claimedItems/approve", async(id:
 
 const removeClaimedItem = createAppAsyncThunk("claimedItems/remove", async(id: string, thunkAPI) => {
     try {
-        await thunkAPI.extra.get("API").createRequest("claimedItems.delete", `/${id}`)
+        const token = await thunkAPI.getState().user.user.token;
+        if(!token){
+            throw new Error("Not authorized")
+        }
+        await thunkAPI.extra.createRequest("claimedItems.delete", `/${id}`, undefined, token)
         return id
     } catch (e: unknown) {
         if(e instanceof APIResponseKnownError) {

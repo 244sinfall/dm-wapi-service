@@ -1,9 +1,10 @@
 import React, {useCallback} from 'react';
 import ContentTitle from "../../../components/common/content-title";
-import {useAppDispatch, useAppSelector} from "../../../services/services/store";
+import {useAppDispatch, useAppSelector} from "../../../store";
 import {updateRate} from "../../../model/charsheets/reducer";
 import RateCounterRate from "../../../components/charsheet/rate-counter/rate";
 import RateCounterTotalRate from "../../../components/charsheet/rate-counter/total-rate";
+import { Rate } from '../../../model/charsheets/types';
 
 const CharsheetReviewRateCounter = (props: { rateMin: number, rateMax: number }) => {
     const state = useAppSelector((state) => state.charsheet);
@@ -14,7 +15,7 @@ const CharsheetReviewRateCounter = (props: { rateMin: number, rateMax: number })
     }
     return (
         <ContentTitle title="Критерии оценки" collapsable={false}>
-            {state.info.rates.map(rate => <RateCounterRate key={rate.rateName}
+            {state.info.rates.map((rate: Rate) => <RateCounterRate key={rate.rateName}
                                                       rateName={rate.rateName}
                                                       rateValue={rate.rateValue}
                                                       minRate={props.rateMin}

@@ -1,12 +1,3 @@
-type CheckItem = {
-    count: number
-    name: ItemName
-}
-
-type ItemName = string
-
-export type ItemQuality = "low" | "usual" | "unusual" | "rare" | "epic"
-
 export type CheckStatus = "Ожидает" | "Закрыт" | "Отказан"
 
 export const CheckStatusCompanion = {
@@ -52,14 +43,10 @@ export const CheckTableParamsCompanion = {
         skip: 0,
         category: "",
         search: "",
-        status: "Все",
-        sortMethod: "",
-        sortDirection: "",
-        force: false
+        status: "Все"
     }),
     is: (data: string): data is keyof CheckTableParams => {
-       return data === "limit" || data === "skip" || data === "category" || data === "search" || data === "status" ||
-       data === "sortMethod" || data === "sortDirection" || data === "force"
+       return data === "limit" || data === "skip" || data === "category" || data === "search" || data === "status"
     }
 }
 
@@ -68,10 +55,7 @@ export type CheckTableParams = {
     skip: number,// Количество чеков, которые пропускаются (количество чеков на странице * номер страницы)
     category: string,
     search: string,
-    status: CheckStatus | "Все",
-    sortMethod: string,
-    sortDirection: string,
-    force: boolean
+    status: CheckStatus | "Все"
 }
 
 export type ChecksState = {
@@ -88,12 +72,4 @@ export const ChecksDefaultState: ChecksState = {
     result: null,
     selectedCheck: null,
     error: ""
-}
-
-export const NextQualityOf: Record<ItemQuality, ItemQuality | null> = {
-    epic: null,
-    rare: "epic",
-    unusual: "rare",
-    usual: "unusual",
-    low: "usual",
 }

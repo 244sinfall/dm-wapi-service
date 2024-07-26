@@ -1,12 +1,12 @@
 import React, {useCallback, useState} from 'react';
-import {PERMISSION, PermissionNameByValue} from "../../model/user";
+import {PermissionNameByValue} from "../../model/user/types";
 import WelcomeExistingUser from "../../components/auth/welcome-existing";
 import {useNavigate} from "react-router-dom";
 import WelcomeNewUser from "../../components/auth/welcome-new";
 import {UserLoginCredentials, UserRegisterCredentials} from "../../model/auth/types";
-import {destroySession} from "../../model/user/reducer";
-import {useAppDispatch, useAppSelector} from "../../services/services/store";
-import useServices from "../../services/use-services";
+import { useAppSelector} from "../../store";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { auth } from '../../auth';
 
 
 const AccountManager = () => {
@@ -14,8 +14,6 @@ const AccountManager = () => {
         user: state.user.user,
         isLoading: state.user.isLoading
     }))
-    const dispatch = useAppDispatch()
-    const authorizer = useServices().get("Authorizer")
     const [errMsg, setErrMsg] = useState("")
     const [isCaptchaDone, setIsCaptchaDone] = useState(process.env.NODE_ENV === "development")
     const nav = useNavigate();
@@ -27,20 +25,25 @@ const AccountManager = () => {
     const callbacks = {
         onRegister: useCallback(async(credentials: UserRegisterCredentials) => {
             if(!validateCaptcha()) return
-            return authorizer.signup(credentials)
-                .catch(e => {
-                    if(e instanceof Error)
-                        setErrMsg(e.message)
-                })
-        }, [authorizer, validateCaptcha]),
+            if (credentials.password !== credentials.passwordCheck) throw Error("Пароли не совпадают")
+            if (!credentials.password || !credentials.email || !credentials.login) throw Error("Не все поля заполнены")
+            const {email, password} = credentials
+            const result = await createUserWithEmailAndPassword(auth, email, password)
+            await updateProfile(result.user, {displayName: credentials.login})
+        }, [validateCaptcha]),
         onLogin: useCallback(async(credentials: UserLoginCredentials) => {
             if(!validateCaptcha()) return
-            return authorizer.login(credentials)
-                .catch(e => {
-                    if(e instanceof Error)
-                        setErrMsg(e.message)
-                })
-        }, [authorizer, validateCaptcha]),
+            if(!credentials.password || !credentials.email || !credentials.email.includes("@")) throw Error("Не все поля заполнены")
+            await signInWithEmailAndPassword(auth, credentials.email, credentials.password)
+        }, [validateCaptcha]),
+        // onReset: useCallback(async(credentials: UserLoginCredentials) => {
+        //     if(!validateCaptcha()) return
+        //     return authorizer.reset(credentials)
+        //         .catch((e: unknown) => {
+        //             if(e instanceof Error)
+        //                 setErrMsg(e.message)
+        //         })
+        // }, [authorizer, validateCaptcha]),
         onCaptcha: useCallback((success: boolean) => {
             setIsCaptchaDone(process.env.NODE_ENV === "development" ? true : success);
         }, [])
@@ -48,17 +51,18 @@ const AccountManager = () => {
     return (
         <>
             {state.user.email ?
-                <WelcomeExistingUser name={state.user.name ?? "Загрузка..."}
+                <WelcomeExistingUser name={state.user.name || "Гость"}
                                      isConnected={state.user.apiUser != null}
                                      onConnect={() => nav('/connect')}
-                                     permissionName={state.isLoading ? "Загрузка..." : PermissionNameByValue[state.user.permission]}
-                                     onLogout={()=> dispatch(destroySession())}/>
+                                     permissionName={state.isLoading ? "Загрузка..." : PermissionNameByValue[(state.user.apiUser?.permission ?? 0) as keyof typeof PermissionNameByValue]}
+                                     onLogout={async()=> await signOut(auth)}/>
             :
                 <WelcomeNewUser onLogin={callbacks.onLogin}
                                 error={errMsg}
                                 isLoading={state.isLoading}
                                 onRegister={callbacks.onRegister}
-                                onCaptcha={callbacks.onCaptcha}/>
+                                onCaptcha={callbacks.onCaptcha}
+                                onReset={async() => console.log('hello')}/>
             }
         </>
     );

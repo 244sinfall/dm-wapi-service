@@ -18,8 +18,6 @@ type CheckTableWrapperProps = {
     params: CheckTableParams
     onParamsChange: <K extends keyof CheckTableParams, V extends CheckTableParams[K]>(key: K, newParam: V) => void
     error?: string
-    isUserAbleToForce: boolean,
-    onForce: () => void
     renderCheck: (check: ICheck) => JSX.Element
 }
 const CheckTableWrapper = (props: CheckTableWrapperProps) => {
@@ -37,10 +35,7 @@ const CheckTableWrapper = (props: CheckTableWrapperProps) => {
                                    search={props.params.search}/>
                 {props.error && <p className="check-table-error">{props.error}</p>}
                 <CheckTableInfo checkCount={props.response?.count ?? 0}
-                            filteredCheckCount={props.response?.filteredCount ?? 0}
-                            actualDate={props.response?.updatedAt ?? ""}
-                            isUserAbleToForceUpdate={props.isUserAbleToForce}
-                            onForce={props.onForce}/>
+                            actualDate={props.response?.updatedAt ?? ""}/>
             </div>
             <CheckTable filteredCheckCount={props.response?.filteredCount ?? 0}
                         showAmount={props.params.limit}
