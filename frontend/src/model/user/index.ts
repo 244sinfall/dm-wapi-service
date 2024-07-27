@@ -21,7 +21,8 @@ const userInitialState = {
 }
 
 export const connectToDarkmoon = createAppAsyncThunk("user/connectToDarkmoon", async(code: string, thunkAPI) => {
-    const response = await thunkAPI.extra.createRequest("users.connect", "", JSON.stringify({code: code}));
+    const token = thunkAPI.getState().user.user.token;
+    const response = await thunkAPI.extra.createRequest("users.connect", "", JSON.stringify({code: code}), token);
     const responseJson = await response.json();
     if(!response.ok) {
         return null;
