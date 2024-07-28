@@ -40,7 +40,6 @@ const (
 	playerPermission  = 0
 )
 
-
 type user struct {
 	Id int `json:"id"`
 }
@@ -95,7 +94,7 @@ func (a *authenticatedUser) GetPermission() int {
 	if a.Scope.SecurityLevel == 2 && arbiter {
 		return arbiterPermission
 	}
-	if a.Scope.SecurityLevel == 1 {
+	if a.Scope.SecurityLevel >= 1 {
 		return gmPermission
 	}
 	return playerPermission
