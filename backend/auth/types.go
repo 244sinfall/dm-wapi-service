@@ -21,6 +21,12 @@ func (e notConnectedError) Error() string {
 	return "Account is not connected to Darkmoon"
 }
 
+type refreshTokenExpiredError struct{}
+
+func (e *refreshTokenExpiredError) Error() string {
+	return "Refresh token expired"
+}
+
 type revokedError struct{}
 
 func (e *revokedError) Error() string {

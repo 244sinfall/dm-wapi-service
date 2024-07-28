@@ -21,8 +21,6 @@ func getChecks(filter *checkRequestFilter) (*checkResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(url)
-	fmt.Println(request)
 	response, err := checkHttpClient.Do(request)
 	if err != nil {
 		return nil, err

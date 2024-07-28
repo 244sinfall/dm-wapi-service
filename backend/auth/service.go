@@ -15,7 +15,6 @@ import (
 
 var authHttpClient = &http.Client{}
 
-
 func authenticateByRefreshToken(token string) (*authServiceTokenKeyPair, error) {
 	data := []byte(`{"Token": "` + token + `"}`)
 	request, err := http.NewRequest("POST", os.Getenv("DM_API_AUTH_SERVICE_REFRESH"), bytes.NewBuffer(data))
@@ -30,6 +29,10 @@ func authenticateByRefreshToken(token string) (*authServiceTokenKeyPair, error) 
 		fmt.Printf("Fail on request execution refresh token: %v", err)
 		return nil, err
 	}
+	defer response.Body.Close()
+	if response.StatusCode == 401 {
+		return nil, &refreshTokenExpiredError{}
+	}
 	var pair = new(authServiceTokenKeyPair)
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&pair)
@@ -37,7 +40,6 @@ func authenticateByRefreshToken(token string) (*authServiceTokenKeyPair, error) 
 		fmt.Printf("Fail on response decode refresh token: %v", err)
 		return nil, err
 	}
-	response.Body.Close()
 	return pair, err
 }
 
@@ -55,13 +57,13 @@ func authenticateByApiKey(api_key string) (*authServiceTokenKeyPair, error) {
 		fmt.Printf("Fail on api key request execution: %v\n", err)
 		return nil, err
 	}
+	defer response.Body.Close()
 	if response.StatusCode == 401 {
 		return nil, &revokedError{}
 	}
 	var pair = new(authServiceTokenKeyPair)
 	decoder := json.NewDecoder(response.Body)
 	err = decoder.Decode(&pair)
-	response.Body.Close()
 	return pair, err
 }
 
@@ -155,7 +157,7 @@ func Authenticate(fbaccess string) (*WapiAuthenticatedUser, error) {
 	if refreshToken != "" {
 		keypair, err = authenticateByRefreshToken(refreshToken)
 	}
-	if(keypair == nil || err != nil) {
+	if keypair == nil || err != nil {
 		keypair, err = authenticateByApiKey(api_key)
 		if err != nil {
 			if (errors.Is(err, &revokedError{})) {
