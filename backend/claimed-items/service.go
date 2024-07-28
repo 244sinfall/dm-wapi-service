@@ -14,10 +14,6 @@ import (
 
 var c = cache.New(5*time.Minute, 10*time.Minute)
 
-func invalidateCache() {
-	c.Delete("items")
-}
-
 func add(i claimedItem) error {
 	if strings.TrimSpace(i.Owner) == "" || strings.TrimSpace(i.Link) == "" || strings.TrimSpace(i.Name) == "" || strings.TrimSpace(i.OwnerProfile) == "" {
 		return errors.New("required fields are empty")
@@ -27,10 +23,13 @@ func add(i claimedItem) error {
 	i.Id = newDoc.ID
 	i.AddedAt = time.Now()
 	_, err := newDoc.Create(globals.GetGlobalContext(), i)
+	itemsI, _ := c.Get("items")
+	items := itemsI.(map[string][]claimedItem)
+	items[i.GetKey()] = append(items[i.GetKey()], i)
+	c.Set("items", items, cache.NoExpiration)
 	if err != nil {
 		return err
 	}
-	invalidateCache()
 	return nil
 }
 
@@ -50,7 +49,16 @@ func delete(id string) (*claimedItem, error) {
 	if err != nil {
 		return nil, err
 	}
-	invalidateCache()
+	itemsI, _ := c.Get("items")
+	items := itemsI.(map[string][]claimedItem)
+	var indexToDelete int
+	for index, item := range items[itemToDelete.GetKey()] {
+		if item.Id == itemToDelete.Id {
+			indexToDelete = index
+		}
+	}
+	items[itemToDelete.GetKey()] = append(items[itemToDelete.GetKey()][:indexToDelete], items[itemToDelete.GetKey()][indexToDelete+1:]...)
+	c.Set("items", items, cache.NoExpiration)
 	return itemToDelete, nil
 }
 
@@ -74,7 +82,14 @@ func approve(id string, approveUser string) error {
 	item.Accepted = true
 	item.AcceptedAt = time.Now()
 	_, err = docRef.Set(globals.GetGlobalContext(), item)
-	invalidateCache()
+	itemsI, _ := c.Get("items")
+	items := itemsI.(map[string][]claimedItem)
+	for _, itemIter := range items[item.GetKey()] {
+		if itemIter.Id == item.Id {
+			itemIter = item
+		}
+	}
+	c.Set("items", items, cache.NoExpiration)
 	return err
 }
 
@@ -84,7 +99,14 @@ func update(id string, toUpdate claimedItem) (*claimedItem, error) {
 	rx, _ := regexp.Compile("[0-9]+")
 	toUpdate.OwnerProofName = "№ " + rx.FindString(toUpdate.OwnerProofLink)
 	_, err := docRef.Set(globals.GetGlobalContext(), toUpdate)
-	invalidateCache()
+	itemsI, _ := c.Get("items")
+	items := itemsI.(map[string][]claimedItem)
+	for _, itemIter := range items[toUpdate.GetKey()] {
+		if itemIter.Id == toUpdate.Id {
+			itemIter = toUpdate
+		}
+	}
+	c.Set("itemds", items, cache.NoExpiration)
 	return &toUpdate, err
 
 }
@@ -130,7 +152,7 @@ func getClaimedItems() map[string][]claimedItem {
 				newItemsMapped[item.GetKey()] = newArr
 			}
 		}
-		c.Set("items", newItemsMapped, cache.DefaultExpiration)
+		c.Set("items", newItemsMapped, cache.NoExpiration)
 		return newItemsMapped
 	}
 	return items.(map[string][]claimedItem)
