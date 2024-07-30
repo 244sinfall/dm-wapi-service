@@ -31,7 +31,7 @@ func GetBaseMessage(entity string, operation string) *RabbitMQMessage {
 type AuthenticatedRabbitMQMessage struct {
 	*RabbitMQMessage
 	Id                int    `json:"id"`
-	IntegrationId     int    `json:"integration"`
+	IntegrationId     int    `json:"integrationId"`
 	IntegrationUserId string `json:"integrationUserId"`
 }
 
