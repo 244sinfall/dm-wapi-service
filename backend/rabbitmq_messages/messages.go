@@ -31,7 +31,7 @@ func GetBaseMessage(entity string, operation string) *RabbitMQMessage {
 type AuthenticatedRabbitMQMessage struct {
 	*RabbitMQMessage
 	Id                int    `json:"id"`
-	Integration       string `json:"integration"`
+	IntegrationId     int    `json:"integration"`
 	IntegrationUserId string `json:"integrationUserId"`
 }
 
@@ -43,7 +43,7 @@ func GetAuthenticatedBaseMessage(au *auth.WapiAuthenticatedUser, entity string, 
 	var new = new(AuthenticatedRabbitMQMessage)
 	new.RabbitMQMessage = GetBaseMessage(entity, operation)
 	new.Id = au.UserId
-	new.Integration = "Wapi"
+	new.IntegrationId = 2
 	new.IntegrationUserId = au.IntegrationUserId
 	return new
 }
