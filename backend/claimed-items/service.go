@@ -26,7 +26,7 @@ func add(i claimedItem) error {
 	itemsI, _ := c.Get("items")
 	items := itemsI.(map[string][]claimedItem)
 	items[i.GetKey()] = append(items[i.GetKey()], i)
-	c.Set("items", items, cache.NoExpiration)
+	c.Replace("items", items, cache.NoExpiration)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func delete(id string) (*claimedItem, error) {
 		}
 	}
 	items[itemToDelete.GetKey()] = append(items[itemToDelete.GetKey()][:indexToDelete], items[itemToDelete.GetKey()][indexToDelete+1:]...)
-	c.Set("items", items, cache.NoExpiration)
+	c.Replace("items", items, cache.NoExpiration)
 	return itemToDelete, nil
 }
 
@@ -84,12 +84,15 @@ func approve(id string, approveUser string) error {
 	_, err = docRef.Set(globals.GetGlobalContext(), item)
 	itemsI, _ := c.Get("items")
 	items := itemsI.(map[string][]claimedItem)
-	for _, itemIter := range items[item.GetKey()] {
+	var indexToReplace int
+	for index, itemIter := range items[item.GetKey()] {
 		if itemIter.Id == item.Id {
-			itemIter = item
+			indexToReplace = index
 		}
 	}
-	c.Set("items", items, cache.NoExpiration)
+	items[item.GetKey()] = append(items[item.GetKey()][:indexToReplace], item)
+	items[item.GetKey()] = append(items[item.GetKey()][indexToReplace+1:], items[item.GetKey()][indexToReplace:]...)
+	c.Replace("items", items, cache.NoExpiration)
 	return err
 }
 
@@ -101,12 +104,15 @@ func update(id string, toUpdate claimedItem) (*claimedItem, error) {
 	_, err := docRef.Set(globals.GetGlobalContext(), toUpdate)
 	itemsI, _ := c.Get("items")
 	items := itemsI.(map[string][]claimedItem)
-	for _, itemIter := range items[toUpdate.GetKey()] {
+	var indexToReplace int
+	for index, itemIter := range items[toUpdate.GetKey()] {
 		if itemIter.Id == toUpdate.Id {
-			itemIter = toUpdate
+			indexToReplace = index
 		}
 	}
-	c.Set("items", items, cache.NoExpiration)
+	items[toUpdate.GetKey()] = append(items[toUpdate.GetKey()][:indexToReplace], toUpdate)
+	items[toUpdate.GetKey()] = append(items[toUpdate.GetKey()][indexToReplace+1:], items[toUpdate.GetKey()][indexToReplace:]...)
+	c.Replace("items", items, cache.NoExpiration)
 	return &toUpdate, err
 
 }
