@@ -106,7 +106,7 @@ func update(id string, toUpdate claimedItem) (*claimedItem, error) {
 			itemIter = toUpdate
 		}
 	}
-	c.Set("itemds", items, cache.NoExpiration)
+	c.Set("items", items, cache.NoExpiration)
 	return &toUpdate, err
 
 }
