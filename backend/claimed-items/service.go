@@ -90,8 +90,7 @@ func approve(id string, approveUser string) error {
 			indexToReplace = index
 		}
 	}
-	items[item.GetKey()] = append(items[item.GetKey()][:indexToReplace], item)
-	items[item.GetKey()] = append(items[item.GetKey()][indexToReplace+1:], items[item.GetKey()][indexToReplace:]...)
+	items[item.GetKey()][indexToReplace] = item
 	c.Replace("items", items, cache.NoExpiration)
 	return err
 }
@@ -110,8 +109,7 @@ func update(id string, toUpdate claimedItem) (*claimedItem, error) {
 			indexToReplace = index
 		}
 	}
-	items[toUpdate.GetKey()] = append(items[toUpdate.GetKey()][:indexToReplace], toUpdate)
-	items[toUpdate.GetKey()] = append(items[toUpdate.GetKey()][indexToReplace+1:], items[toUpdate.GetKey()][indexToReplace:]...)
+	items[toUpdate.GetKey()][indexToReplace] = toUpdate
 	c.Replace("items", items, cache.NoExpiration)
 	return &toUpdate, err
 
