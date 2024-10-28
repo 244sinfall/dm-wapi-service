@@ -36,7 +36,7 @@ func CORSMiddleware() gin.HandlerFunc {
 
 func main() {
 	if err := sentry.Init(sentry.ClientOptions{
-		Dsn: os.Getenv("SENTRY_DSN"),
+		Dsn:           os.Getenv("SENTRY_DSN"),
 		EnableTracing: true,
 		// Set TracesSampleRate to 1.0 to capture 100%
 		// of transactions for tracing.
@@ -64,7 +64,7 @@ func main() {
 	router.POST("/users/reset", auth.ResetUserPassword)
 	router.POST("v2/users/connect", auth.ConnectToAuthService)
 	router.GET("v2/users/me", auth.GetMe)
-	err := router.Run("0.0.0.0:80")
+	err := router.Run("0.0.0.0:" + os.Getenv("BACKEND_PORT"))
 	if err != nil {
 		log.Fatalf("Error on listening: %v", err)
 	}
