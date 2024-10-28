@@ -9,8 +9,12 @@ import (
 	logcleaner "darkmoon-wapi-service/log-cleaner"
 	"darkmoon-wapi-service/participants"
 	"darkmoon-wapi-service/review"
+	"fmt"
 	"log"
+	"os"
 
+	"github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,8 +35,19 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn: os.Getenv("SENTRY_DSN"),
+		EnableTracing: true,
+		// Set TracesSampleRate to 1.0 to capture 100%
+		// of transactions for tracing.
+		// We recommend adjusting this value in production,
+		TracesSampleRate: 1.0,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	router.Use(sentrygin.New(sentrygin.Options{}))
 	router.Use(CORSMiddleware())
 	router.POST("/generate_charsheet_review", review.GenerateReview)
 	router.POST("/events/clean_participants_text", participants.CleanParticipantsText)

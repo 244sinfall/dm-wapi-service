@@ -12,6 +12,7 @@ import (
 	"darkmoon-wapi-service/auth"
 	rabbitmqmessages "darkmoon-wapi-service/rabbitmq_messages"
 
+	"github.com/getsentry/sentry-go"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -28,6 +29,7 @@ func init() {
 func SendLogMessage(message rabbitmqmessages.IRabbitMQMessage, user *auth.WapiAuthenticatedUser, target *auth.WapiAuthenticatedUser) {
 	ch, err := rabbitMqConnection.Channel()
 	if err != nil {
+		sentry.CaptureException(err)
 		fmt.Printf("Cannot create a channel: %v\n", err)
 		return
 	}
@@ -44,6 +46,7 @@ func SendLogMessage(message rabbitmqmessages.IRabbitMQMessage, user *auth.WapiAu
 	)
 
 	if err != nil {
+		sentry.CaptureException(err)
 		fmt.Printf("Cannot declare an exchange: %v\n", err)
 		return
 	}
@@ -53,6 +56,7 @@ func SendLogMessage(message rabbitmqmessages.IRabbitMQMessage, user *auth.WapiAu
 
 	body, err := json.Marshal(message)
 	if err != nil {
+		sentry.CaptureException(err)
 		fmt.Printf("Cannot marshal message: %v\n", err)
 		return
 	}
@@ -66,6 +70,7 @@ func SendLogMessage(message rabbitmqmessages.IRabbitMQMessage, user *auth.WapiAu
 			Body:        body,
 		})
 	if err != nil {
+		sentry.CaptureException(err)
 		fmt.Printf("Cannot publish message: %v\n", err)
 		return
 	}
