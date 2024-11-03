@@ -16,26 +16,62 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-var rabbitMqConnection *amqp.Connection = nil
+type rabbitMqConnection struct {
+	conn  *amqp.Connection
+	retry bool
+}
+
+// var rabbitMqConnection *amqp.Connection = nil
+var client *rabbitMqConnection = nil
 
 func init() {
+	client = new(rabbitMqConnection)
+	client.createConnection()
+	client.allowRetry()
+}
+
+func (c *rabbitMqConnection) allowRetry() {
+	c.retry = true
+}
+
+func (c *rabbitMqConnection) isAbleToRetry() bool {
+	return c.retry
+}
+
+func (c *rabbitMqConnection) restrictRetry() {
+	c.retry = false
+}
+
+func (c *rabbitMqConnection) createConnection() {
 	conn, err := amqp.DialTLS(os.Getenv("DM_API_RABBITMQ_STRING"), &tls.Config{InsecureSkipVerify: true})
 	if err != nil {
 		log.Fatalf("Cannot connect to rabbitmq: %v\n", err)
 	}
-	rabbitMqConnection = conn
+	c.conn = conn
+}
+
+func (c *rabbitMqConnection) getChannel() *amqp.Channel {
+	channel, err := c.conn.Channel()
+	if err != nil {
+		if c.isAbleToRetry() {
+			sentry.CaptureMessage("Error on getting a channel: " + err.Error() + " Retrying!")
+			c.createConnection()
+			c.restrictRetry()
+			return c.getChannel()
+		} else {
+			sentry.CaptureException(err)
+			return nil
+		}
+	}
+	c.allowRetry()
+	return channel
 }
 
 func SendLogMessage(message rabbitmqmessages.IRabbitMQMessage, user *auth.WapiAuthenticatedUser, target *auth.WapiAuthenticatedUser) {
-	ch, err := rabbitMqConnection.Channel()
-	if err != nil {
-		sentry.CaptureException(err)
-		fmt.Printf("Cannot create a channel: %v\n", err)
-		return
-	}
+	ch := client.getChannel()
 	defer ch.Close()
 
-	err = ch.ExchangeDeclare(
+	err := ch.ExchangeDeclare(
 		"logs",  // name
 		"topic", // type
 		false,   // durable
